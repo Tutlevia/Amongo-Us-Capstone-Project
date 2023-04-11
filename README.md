@@ -1,5 +1,5 @@
 ### amongo us
 'Team members:'
-1. Kieran
+1. Kieran Koh Gene Kai
 2. Gavriel Huang
-3. Qi Xing
+3. Chia Qi Xing
