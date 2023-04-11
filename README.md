@@ -1,5 +1,5 @@
 ### amongo us
 'Team members:'
-1. 
-2. 
-3.
+1. Kieran
+2. Gavriel Huang
+3. Qi Xing
