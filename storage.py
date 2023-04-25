@@ -192,7 +192,7 @@ class StudentCollection(Collection):
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Student"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "Id")
         self._create_table()
 
     def _create_table(self):
@@ -201,12 +201,13 @@ class StudentCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "Id" TEXT UNIQUE,
                 "Name" TEXT,
                 "Student_age" INT,
                 "Year_enrolled" INT,
                 "Graduating_year" INT,
                 "Class_name" TEXT,
-                Primary Key("Name")
+                Primary Key("Id")
                 Foreign Key("Class_name") REFERENCES Class("Name")
                 );'''
 
@@ -233,7 +234,7 @@ class StudentCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?,?,?,?);
+                    VALUES (?,?,?,?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -292,7 +293,7 @@ class ClassCollection(Collection):
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Class"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "Id")
         self._create_table()
 
     def _create_table(self):
@@ -301,9 +302,10 @@ class ClassCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "Id" TEXT UNIQUE,
                 "Name" TEXT,
                 "Level" TEXT,
-                Primary Key("Name")
+                Primary Key("Id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -328,7 +330,7 @@ class ClassCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?);
+                    VALUES (?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -384,7 +386,7 @@ class SubjectCollection(Collection):
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Subject"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "Id")
         self._create_table()
 
     def _create_table(self):
@@ -393,9 +395,10 @@ class SubjectCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "Id" TEXT UNIQUE,
                 "Name" TEXT,
                 "Level" TEXT,
-                Primary Key("Name", "Level")
+                Primary Key("Id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -420,12 +423,13 @@ class SubjectCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?);
+                    VALUES (?,?,?);
                     '''
             self._executedml(query,params)
             return True
         else:
             return False
+            
     def update(self, key: str, record: dict) -> bool:
         '''
         Updates the record with the matching name, by replacing its elements with the given record.
@@ -476,7 +480,7 @@ class CCACollection(Collection):
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "CCA"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "Id")
         self._create_table()
 
     def _create_table(self):
@@ -485,9 +489,10 @@ class CCACollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "Id" TEXT UNIQUE,
                 "Name" TEXT,
                 "Type" TEXT,
-                Primary Key("Name")
+                Primary Key("Id")
                 );'''
                 
                 
@@ -513,7 +518,7 @@ class CCACollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?);
+                    VALUES (?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -568,7 +573,7 @@ class ActivityCollection(Collection):
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Activity"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "Id")
         self._create_table()
 
     def _create_table(self):
@@ -577,6 +582,7 @@ class ActivityCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "Id" TEXT UNIQUE,
                 "Name" TEXT,
                 "Start_date" TEXT,
                 "End_date" TEXT,
@@ -586,8 +592,8 @@ class ActivityCollection(Collection):
                 "Award" TEXT,
                 "Hour" INT,
                 "CCA_name" TEXT,
-                Primary Key("Name")
-                Foreign Key("CCA_name") REFERENCES CCA("Name")
+                Primary Key("Id")
+                Foreign Key("CCA_name") REFERENCES CCA("Id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -612,7 +618,7 @@ class ActivityCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?,?,?,?,?,?,?,?);
+                    VALUES (?,?,?,?,?,?,?,?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -651,3 +657,57 @@ class ActivityCollection(Collection):
             return False
             
 #===========================================================================================================================================
+
+#Joint tables to be done
+# class StudentSubjectCollection():
+#     """
+#     A collection class for junction table used to connect Student and Subject database
+    
+#     Attributes: 
+#     (-) dbname: str -> The name of the database.
+#     (-) tblname: str -> The name of the table that the class is using.
+#     (-) key: str -> Primary key for query in the table
+#     Methods:
+#     (+) insert(record) -> Inserts a record into the collection, after checking whether it is present.
+    
+#     (+) update(key, record) -> Updates the record with the matching name, by replacing its elements with the given record.
+    
+#     (+) find(key) -> Finds the record with a matching key and returns a copy of it.
+
+#     (+) findall() -> Returns all the records in the table from the database.
+
+#     (+) delete(key) -> Deletes the record with a matching key.
+#     """
+
+#     def __init__(self):
+#         self._dbname = "MyWebApp.db"
+#         self._tblname = "Activity"
+#         super().__init__(self._dbname, self._tblname, "Id")
+#         self._create_table()
+
+#     def _create_table(self):
+#         """
+#         A helper function used to create the table in the database for the entity collection if it does not already exists
+#         """
+        
+#         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+#                 "Name" TEXT,
+#                 "Start_date" TEXT,
+#                 "End_date" TEXT,
+#                 "Description" TEXT,
+#                 "Category" TEXT,
+#                 "Role" TEXT,
+#                 "Award" TEXT,
+#                 "Hour" INT,
+#                 "CCA_name" TEXT,
+#                 Primary Key("Id")
+#                 Foreign Key("CCA_name") REFERENCES CCA("Id")
+#                 );'''
+                
+#         with sqlite3.connect(self._dbname) as conn:
+#             cur = conn.cursor()
+#             cur.execute(query)
+#             #conn.close()
+            
+#===========================================================================================================================================
+
