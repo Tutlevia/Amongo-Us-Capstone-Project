@@ -206,9 +206,9 @@ class StudentCollection(Collection):
                 "Student_age" INT,
                 "Year_enrolled" INT,
                 "Graduating_year" INT,
-                "Class_name" TEXT,
+                "Class_id" TEXT,
                 Primary Key("Id")
-                Foreign Key("Class_name") REFERENCES Class("Name")
+                Foreign Key("Class_id") REFERENCES Class("Id")
                 );'''
 
                 
@@ -260,7 +260,7 @@ class StudentCollection(Collection):
                         "Student_age" = ?,
                         "Year_enrolled" = ?,
                         "Graduating_year" = ?,
-                        "Class_name" = ?
+                        "Class_id" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -591,9 +591,9 @@ class ActivityCollection(Collection):
                 "Role" TEXT,
                 "Award" TEXT,
                 "Hour" INT,
-                "CCA_name" TEXT,
+                "CCA_id" TEXT,
                 Primary Key("Id")
-                Foreign Key("CCA_name") REFERENCES CCA("Id")
+                Foreign Key("CCA_id") REFERENCES CCA("Id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -648,7 +648,7 @@ class ActivityCollection(Collection):
                         "Role" = ?,
                         "Award" = ?,
                         "Hour" = ?,
-                        "CCA_name" = ?
+                        "CCA_id" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -657,57 +657,3 @@ class ActivityCollection(Collection):
             return False
             
 #===========================================================================================================================================
-
-#Joint tables to be done
-# class StudentSubjectCollection():
-#     """
-#     A collection class for junction table used to connect Student and Subject database
-    
-#     Attributes: 
-#     (-) dbname: str -> The name of the database.
-#     (-) tblname: str -> The name of the table that the class is using.
-#     (-) key: str -> Primary key for query in the table
-#     Methods:
-#     (+) insert(record) -> Inserts a record into the collection, after checking whether it is present.
-    
-#     (+) update(key, record) -> Updates the record with the matching name, by replacing its elements with the given record.
-    
-#     (+) find(key) -> Finds the record with a matching key and returns a copy of it.
-
-#     (+) findall() -> Returns all the records in the table from the database.
-
-#     (+) delete(key) -> Deletes the record with a matching key.
-#     """
-
-#     def __init__(self):
-#         self._dbname = "MyWebApp.db"
-#         self._tblname = "Activity"
-#         super().__init__(self._dbname, self._tblname, "Id")
-#         self._create_table()
-
-#     def _create_table(self):
-#         """
-#         A helper function used to create the table in the database for the entity collection if it does not already exists
-#         """
-        
-#         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-#                 "Name" TEXT,
-#                 "Start_date" TEXT,
-#                 "End_date" TEXT,
-#                 "Description" TEXT,
-#                 "Category" TEXT,
-#                 "Role" TEXT,
-#                 "Award" TEXT,
-#                 "Hour" INT,
-#                 "CCA_name" TEXT,
-#                 Primary Key("Id")
-#                 Foreign Key("CCA_name") REFERENCES CCA("Id")
-#                 );'''
-                
-#         with sqlite3.connect(self._dbname) as conn:
-#             cur = conn.cursor()
-#             cur.execute(query)
-#             #conn.close()
-            
-#===========================================================================================================================================
-
