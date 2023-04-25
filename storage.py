@@ -201,14 +201,14 @@ class StudentCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Id" TEXT UNIQUE,
-                "Name" TEXT,
-                "Student_age" INT,
-                "Year_enrolled" INT,
-                "Graduating_year" INT,
-                "Class_id" TEXT,
-                Primary Key("Id")
-                Foreign Key("Class_id") REFERENCES Class("Id")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "student_age" INT,
+                "year_enrolled" INT,
+                "graduating_year" INT,
+                "class_id" TEXT,
+                Primary Key("id")
+                Foreign Key("class_id") REFERENCES Class("id")
                 );'''
 
                 
@@ -256,11 +256,11 @@ class StudentCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Student_age" = ?,
-                        "Year_enrolled" = ?,
-                        "Graduating_year" = ?,
-                        "Class_id" = ?
+                    SET "name" = ?,
+                        "student_age" = ?,
+                        "year_enrolled" = ?,
+                        "graduating_year" = ?,
+                        "class_id" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -302,10 +302,10 @@ class ClassCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Id" TEXT UNIQUE,
-                "Name" TEXT,
-                "Level" TEXT,
-                Primary Key("Id")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "level" TEXT,
+                Primary Key("id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -352,8 +352,8 @@ class ClassCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Level" = ?
+                    SET "name" = ?,
+                        "level" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -395,10 +395,10 @@ class SubjectCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Id" TEXT UNIQUE,
-                "Name" TEXT,
-                "Level" TEXT,
-                Primary Key("Id")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "level" TEXT,
+                Primary Key("id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -446,8 +446,8 @@ class SubjectCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Level" = ?
+                    SET "name" = ?,
+                        "level" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -489,10 +489,10 @@ class CCACollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Id" TEXT UNIQUE,
-                "Name" TEXT,
-                "Type" TEXT,
-                Primary Key("Id")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "type" TEXT,
+                Primary Key("id")
                 );'''
                 
                 
@@ -540,8 +540,8 @@ class CCACollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Type" = ?
+                    SET "name" = ?,
+                        "type" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -582,18 +582,18 @@ class ActivityCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Id" TEXT UNIQUE,
-                "Name" TEXT,
-                "Start_date" TEXT,
-                "End_date" TEXT,
-                "Description" TEXT,
-                "Category" TEXT,
-                "Role" TEXT,
-                "Award" TEXT,
-                "Hour" INT,
-                "CCA_id" TEXT,
-                Primary Key("Id")
-                Foreign Key("CCA_id") REFERENCES CCA("Id")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "start_date" TEXT,
+                "end_date" TEXT,
+                "description" TEXT,
+                "category" TEXT,
+                "role" TEXT,
+                "award" TEXT,
+                "hour" INT,
+                "cca_id" TEXT,
+                Primary Key("id")
+                Foreign Key("cca_id") REFERENCES CCA("id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -640,15 +640,15 @@ class ActivityCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Start_date" = ?,
-                        "End_date" = ?,
-                        "Description" = ?,
-                        "Category" = ?,
-                        "Role" = ?,
-                        "Award" = ?,
-                        "Hour" = ?,
-                        "CCA_id" = ?
+                    SET "name" = ?,
+                        "start_date" = ?,
+                        "end_date" = ?,
+                        "description" = ?,
+                        "category" = ?,
+                        "role" = ?,
+                        "award" = ?,
+                        "hour" = ?,
+                        "cca_id" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
