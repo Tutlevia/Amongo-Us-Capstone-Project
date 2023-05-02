@@ -270,7 +270,7 @@ class StudentCollection(Collection):
         else:
             return False
 
-    def viewactivity(self, key: str) -> list:
+    def viewactivity(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the activity of the record with the matching name.
 
@@ -398,7 +398,7 @@ class ClassCollection(Collection):
         else:
             return False
             
-    def viewstudent(self, key: str) -> list:
+    def viewstudent(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the student record with the matching class id.
 
@@ -617,7 +617,7 @@ class CCACollection(Collection):
         else:
             return False
 
-    def viewstudent(self, key: str) -> list:
+    def viewstudent(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the student record with the matching CCA
 
@@ -760,7 +760,7 @@ class ActivityCollection(Collection):
         else:
             return False
 
-    def viewstudent(self, key: str) -> list:
+    def viewstudent(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the student record with the matching activity name.
 
@@ -882,15 +882,12 @@ class Junctiontable:
         Returns True if the record is found, False if it is not found
         '''
         query = f'''SELECT * FROM {self.tblname}
-                    WHERE {self._leftkey} = ?;'''
-        key = record.values()
-        result = self._executedql(query, "many", (key[0],))
+                    WHERE {self._leftkey} = ? and {self._rightkey} = ?;'''
+        key = tuple(record.values())
+        result = self._executedql(query, "one", key)
         if result is not None:
-            for records in result:
-                if dict(records)[self._rightkey] == key[1]:
-                    return True
+            return True
         return False
-
 
     def insert(self, record: dict) -> bool:
         '''
