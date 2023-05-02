@@ -1,0 +1,69 @@
+<!DOCTYPE HTML> 
+
+<html> 
+    <head>
+    <title>SCP - Home </title>
+    {% include "head.html" %} 
+    </head>
+    {% include "header.html" %}
+    
+    <body> 
+        
+
+        <div class="container"> 
+            <span class="highlight-blue"> What would you like to do today?</span>
+            <br/><br/><br/>
+
+         <div class="dropdown button button1">
+            <p> ADD  &#9660; </p>
+            <div class="dropdown-content">
+                <a href="/add_cca"> CCA</a>
+                </br>
+                <a href="/add_activity"> Activity</a>
+            </div>        
+        </div>
+
+         <div class="dropdown button button2">
+            <p> VIEW &#9660; </p>
+            <div class="dropdown-content">
+                <a href="/view/student"> Student</a>
+                </br>
+                <a href="/view/class"> Class</a>
+                </br>
+                <a href="/view/cca"> CCA</a>
+                </br>
+                <a href="/view/activity"> Activity</a>
+
+            </div>  
+        </div>
+
+        <div class="dropdown button button3">
+            <p> VIEW ALL &#9660; </p>
+            <div class="dropdown-content">
+                <a href="/view_all/student"> Student</a>
+                </br>
+                <a href="/view_all/activity"> Activity</a>
+            </div>
+        </div>
+
+        <div class="dropdown button button4">
+            <p> EDIT &#9660; </p>
+            <div class="dropdown-content">
+                <a href="/edit/membership"> Membership</a>
+                </br>
+                <a href="/edit/participation"> Participation</a>
+            </div>  
+        </div> 
+
+        <!-- <div>
+            <select>
+                <option value="CCA">CCA</option>
+                <option value="Activity">Activity</option>
+            </select>
+        </div>
+        {% include "footer.html" %}
+        </div> -->
+    </body>
+
+
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title> {{title}} </title>
+    {% include "head.html" %}   
+</head>
+
+<body>
+    {% include "header.html" %}
+
+    <div class='container'> 
+        <table> 
+            <tr> 
+            {% for header in form_header.values() %} 
+                <td> {{header}} </td>
+            {% endfor %}
+                
+            {% for student in form_data %}
+                <tr>
+                {% for value in student() %}
+                    <td>{{ student }}</td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+
+        </table>
+
+
+    {% include "footer.html" %}
+    </div>
+</body>
+
+
+    
+</html>
