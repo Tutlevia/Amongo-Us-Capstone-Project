@@ -4,4 +4,4 @@
 2. Gavriel Huang
 3. Chia Qi Xing
 
-We did not implement the view class because 
+
