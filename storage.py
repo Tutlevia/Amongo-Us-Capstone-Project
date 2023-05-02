@@ -187,12 +187,14 @@ class StudentCollection(Collection):
     (+) findall() -> Returns all the records in the table from the database.
 
     (+) delete(key) -> Deletes the record with a matching key.
+
+    (+) viewactivity(key) -> Returns all activity a given student is involved in
     """
 
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Student"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "id")
         self._create_table()
 
     def _create_table(self):
@@ -201,13 +203,14 @@ class StudentCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Name" TEXT,
-                "Student_age" INT,
-                "Year_enrolled" INT,
-                "Graduating_year" INT,
-                "Class_name" TEXT,
-                Primary Key("Name")
-                Foreign Key("Class_name") REFERENCES Class("Name")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "student_age" INT,
+                "year_enrolled" INT,
+                "graduating_year" INT,
+                "class_id" TEXT,
+                Primary Key("id")
+                Foreign Key("class_id") REFERENCES Class("id")
                 );'''
 
                 
@@ -233,7 +236,7 @@ class StudentCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?,?,?,?);
+                    VALUES (?,?,?,?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -255,18 +258,51 @@ class StudentCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Student_age" = ?,
-                        "Year_enrolled" = ?,
-                        "Graduating_year" = ?,
-                        "Class_name" = ?
+                    SET "name" = ?,
+                        "student_age" = ?,
+                        "year_enrolled" = ?,
+                        "graduating_year" = ?,
+                        "class_id" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
             return True
         else:
             return False
-            
+
+    def viewactivity(self, key: str) -> list:
+        '''
+        Views all the activity of the record with the matching name.
+
+        Parameter:
+        key: str -> used to identify the original entity
+
+        Return:
+        Returns a list of dictionary for the activities that the student took part in if they exists, else return None
+        '''
+
+        query = f'''SELECT "Activity"."id" as "id",
+                           "Activity"."name" as "name",
+                           "Activity"."start_date" as "start_date",
+                           "Activity"."end_date" as "end_date"
+                           "Activity"."hour as "hour"
+                    FROM "StudentActivity"
+                    INNER JOIN "{self._tblname}"
+                        ON "StudentActivity"."student_id" = "{self._tblname}"."id"
+                    INNER JOIN "Activity"
+                        ON "StudentActivity"."activity_id" = "Activity"."id"
+                    ORDERED BY "Activity"."id";
+                    WHERE "Student"."id" = {key};
+                '''
+        result = self._executedql(query, "many", (None,))
+        if result is not None:
+            lst = []
+            for record in result:
+                lst.append(dict(record))
+            return lst
+        else:
+            return None
+        
 #===========================================================================================================================================
 
 class ClassCollection(Collection):
@@ -287,12 +323,14 @@ class ClassCollection(Collection):
     (+) findall() -> Returns all the records in the table from the database.
 
     (+) delete(key) -> Deletes the record with a matching key.
+
+    (+) viewstudent(key) -> Returns all the records of student from a class
     """
 
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Class"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "id")
         self._create_table()
 
     def _create_table(self):
@@ -301,9 +339,10 @@ class ClassCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Name" TEXT,
-                "Level" TEXT,
-                Primary Key("Name")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "level" TEXT,
+                Primary Key("id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -328,7 +367,7 @@ class ClassCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?);
+                    VALUES (?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -350,8 +389,8 @@ class ClassCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Level" = ?
+                    SET "name" = ?,
+                        "level" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -359,6 +398,35 @@ class ClassCollection(Collection):
         else:
             return False
             
+    def viewstudent(self, key: str) -> list:
+        '''
+        Views all the student record with the matching class id.
+
+        Parameter:
+        key: str -> used to identify the original entity
+
+        Return:
+        Returns a list of dictionary for the students that are in a class if they exists, else return None
+        '''
+
+        query = f'''SELECT "Student"."id" as "id",
+                           "Student"."name" as "name",
+                           "Class"."name" as "class"
+                    FROM "Class"
+                    INNER JOIN "Student"
+                        ON "Class"."id" = "Student"."class_id" 
+                    ORDERED BY "Student"."id"
+                    WHERE "Class"."id" = {key};
+                '''
+        result = self._executedql(query, "many", (None,))
+        if result is not None:
+            lst = []
+            for record in result:
+                lst.append(dict(record))
+            return lst
+        else:
+            return None
+        
 #===========================================================================================================================================
 
 class SubjectCollection(Collection):
@@ -384,7 +452,7 @@ class SubjectCollection(Collection):
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Subject"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "id")
         self._create_table()
 
     def _create_table(self):
@@ -393,9 +461,10 @@ class SubjectCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Name" TEXT,
-                "Level" TEXT,
-                Primary Key("Name", "Level")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "level" TEXT,
+                Primary Key("id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -420,12 +489,13 @@ class SubjectCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?);
+                    VALUES (?,?,?);
                     '''
             self._executedml(query,params)
             return True
         else:
             return False
+            
     def update(self, key: str, record: dict) -> bool:
         '''
         Updates the record with the matching name, by replacing its elements with the given record.
@@ -442,8 +512,8 @@ class SubjectCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Level" = ?
+                    SET "name" = ?,
+                        "level" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
@@ -471,12 +541,14 @@ class CCACollection(Collection):
     (+) findall() -> Returns all the records in the table from the database.
 
     (+) delete(key) -> Deletes the record with a matching key.
+
+    (+) viewstudent(key) -> Returns all the record of student in a matching CCA
     """
 
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "CCA"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "id")
         self._create_table()
 
     def _create_table(self):
@@ -485,9 +557,10 @@ class CCACollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Name" TEXT,
-                "Type" TEXT,
-                Primary Key("Name")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "type" TEXT,
+                Primary Key("id")
                 );'''
                 
                 
@@ -513,7 +586,7 @@ class CCACollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?);
+                    VALUES (?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -535,14 +608,48 @@ class CCACollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Type" = ?
+                    SET "name" = ?,
+                        "type" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
             return True
         else:
             return False
+
+    def viewstudent(self, key: str) -> list:
+        '''
+        Views all the student record with the matching CCA
+
+        Parameter:
+        key: str -> used to identify the original entity
+
+        Return:
+        Returns a list of dictionary for the students that are in a CCA if they exists, else return None
+        '''
+
+        query = f'''SELECT "Student"."id" as "id",
+                           "Student"."name" as "name",
+                           "Class"."name" as "class"
+                    FROM "StudentCCA"
+                    INNER JOIN "Student"
+                        ON "StudentCCA"."student_id" = "Student"."id"
+                    INNER JOIN "CCA"
+                        ON "StudentCCA"."cca_id" = "CCA"."id"
+                    LEFT JOIN "Class"
+                        ON "Student"."class_id" = "Class"."id"
+                    ORDERED BY "Student"."id"
+                    WHERE "CCA"."id" = {key};
+                '''
+        result = self._executedql(query, "many", (None,))
+        if result is not None:
+            lst = []
+            for record in result:
+                lst.append(dict(record))
+            return lst
+        else:
+            return None
+
 #===========================================================================================================================================
 
 class ActivityCollection(Collection):
@@ -563,12 +670,14 @@ class ActivityCollection(Collection):
     (+) findall() -> Returns all the records in the table from the database.
 
     (+) delete(key) -> Deletes the record with a matching key.
+
+    (+) viewstudent(key) -> Returns all students given an activity
     """
 
     def __init__(self):
         self._dbname = "MyWebApp.db"
         self._tblname = "Activity"
-        super().__init__(self._dbname, self._tblname, "Name")
+        super().__init__(self._dbname, self._tblname, "id")
         self._create_table()
 
     def _create_table(self):
@@ -577,17 +686,18 @@ class ActivityCollection(Collection):
         """
         
         query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
-                "Name" TEXT,
-                "Start_date" TEXT,
-                "End_date" TEXT,
-                "Description" TEXT,
-                "Category" TEXT,
-                "Role" TEXT,
-                "Award" TEXT,
-                "Hour" INT,
-                "CCA_name" TEXT,
-                Primary Key("Name")
-                Foreign Key("CCA_name") REFERENCES CCA("Name")
+                "id" TEXT UNIQUE,
+                "name" TEXT,
+                "start_date" TEXT,
+                "end_date" TEXT,
+                "description" TEXT,
+                "category" TEXT,
+                "role" TEXT,
+                "award" TEXT,
+                "hour" INT,
+                "cca_id" TEXT,
+                Primary Key("id")
+                Foreign Key("cca_id") REFERENCES CCA("id")
                 );'''
                 
         with sqlite3.connect(self._dbname) as conn:
@@ -612,7 +722,7 @@ class ActivityCollection(Collection):
             params = tuple(record.values())
             query = f'''
                     INSERT INTO "{self._tblname}"
-                    VALUES (?,?,?,?,?,?,?,?,?);
+                    VALUES (?,?,?,?,?,?,?,?,?,?);
                     '''
             self._executedml(query,params)
             return True
@@ -634,20 +744,357 @@ class ActivityCollection(Collection):
             params = (*tuple(record.values()), key)
             print(params)
             query = f'''UPDATE "{self._tblname}"
-                    SET "Name" = ?,
-                        "Start_date" = ?,
-                        "End_date" = ?,
-                        "Description" = ?,
-                        "Category" = ?,
-                        "Role" = ?,
-                        "Award" = ?,
-                        "Hour" = ?,
-                        "CCA_name" = ?
+                    SET "name" = ?,
+                        "start_date" = ?,
+                        "end_date" = ?,
+                        "description" = ?,
+                        "category" = ?,
+                        "role" = ?,
+                        "award" = ?,
+                        "hour" = ?,
+                        "cca_id" = ?
                     WHERE {self._key} = ?;
             '''
             self._executedml(query, params)
             return True
         else:
             return False
+
+    def viewstudent(self, key: str) -> list:
+        '''
+        Views all the student record with the matching activity name.
+
+        Parameter:
+        key: str -> used to identify the original entity
+
+        Return:
+        Returns a list of dictionary for the students that took part in an activity if they exists, else return None
+        '''
+
+        query = f'''SELECT "Student"."id" as "id",
+                           "Student"."name" as "name",
+                           "Class"."name" as "class"
+                    FROM "StudentActivity"
+                    INNER JOIN "Activity"
+                        ON "StudentActivity"."student_id" = "Activity"."id"
+                    INNER JOIN "Student"
+                        ON "StudentActivity"."activity_id" = "Student"."id"
+                    LEFT JOIN "Class"
+                        ON "Student"."class_id" = "Class"."id"
+                    ORDERED BY "Student"."id"
+                    WHERE "Activity"."id" = {key};
+                '''
+        result = self._executedql(query, "many", (None,))
+        if result is not None:
+            lst = []
+            for record in result:
+                lst.append(dict(record))
+            return lst
+        else:
+            return None
+        
             
+#===========================================================================================================================================
+
+class Junctiontable:
+    '''
+    A base junction table class that can be inherited from.
+    
+    Attribute:
+    (-) dbname: str -> The name of the database
+    (-) tblname: str -> The name of the junction table
+    (-) leftkey: str -> The key of the left table in the junction table
+    (-) rightkey: str -> The key of the right table in the junction table
+
+    Methods:
+    (+) find(record) -> check if a certain record exists
+    
+    (+) insert(record) -> Inserts a record into the junction table, after checking whether it is present.
+
+    (+) update(old_record, new_record) -> Updates a record in the junction table, after checking whether it is present. 
+
+    (+) delete(record) -> Delete a record in the junction table, after checking whether it is present.
+    
+    '''
+
+    def __init__(self, dbname: str, tblname: str, left_key: str, right_key: str):
+        self._dbname = dbname
+        self._tblname = tblname
+        self._leftkey = left_key
+        self._rightkey = right_key
+
+    def _executedql(self, query: str, type: str, params: tuple) -> sqlite3.Row:
+        '''
+        A helper function that is used by self.find and self.findall to execute the Data Query Language in sqlite3
+
+        Parameters:
+        query: str -> SQL query to execute
+        type: str -> Specifies the type of Search Query to execute
+        Params: tuple -> Parameterised values to be used in query
+        
+        Return:
+        result: sqlite3.Row -> the sql query result based on the query and type provided.
+        '''
+        with sqlite3.connect(self._dbname) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            result = None
+            #finding one entry in the table
+            if type == 'one':
+                cur.execute(query, params)
+                result = cur.fetchone()
+                
+            #getting all entries in the table
+            elif type == "many":
+                cur.execute(query)
+                result = cur.fetchall()
+                
+            #might want to add error message
+            else:
+                pass
+
+            #conn.close()
+            return result
+
+    def _executedml(self, query: str, params: tuple) -> None:
+        '''
+        A helper function used to execute by self.insert, self.update, self.delete to execute Data Manipulation Lanaguage in sqlite3
+
+        Parameter:
+        query: str -> sqlite3 query to be executed
+        params: tuple -> Paramterised values to be used in the query
+        '''
+        with sqlite3.connect(self._dbname) as conn:
+            cur = conn.cursor()
+            cur.execute(query, params)
+            conn.commit()
+            #conn.close()
+        return
+
+    def find(self, record: dict) -> bool:
+        '''
+        Checks if a certain record exists within the junction table given the record
+
+        Parameter:
+        record: dict -> A dictionary containing the record to be checked if it exists
+
+        Return:
+        Returns True if the record is found, False if it is not found
+        '''
+        query = f'''SELECT * FROM {self.tblname}
+                    WHERE {self._leftkey} = ?;'''
+        key = record.values()
+        result = self._executedql(query, "many", (key[0],))
+        if result is not None:
+            for records in result:
+                if dict(records)[self._rightkey] == key[1]:
+                    return True
+        return False
+
+
+    def insert(self, record: dict) -> bool:
+        '''
+        Inserts a record into the collection, after checking whether it is present.
+
+        Parameter:
+        record: dict -> A dictionary containing the record of the entity to be added to the database
+
+        Return:
+        Returns True if the record has successfully been added, False otherwise
+        '''
+        if self.find(record) is not True:
+            query = f'''INSERT INTO "{self._tblname}"
+                        VALUES(?,?);'''
+    
+            params = tuple(record.values())
+            self._executedml(query, params)
+            return True
+        else:
+            return False
+        
+    def update(self, old_record: dict, new_record: dict) -> bool:
+        '''
+        Updates a record into the collection, after checking whether it is present.
+
+        Parameter:
+        old_record: dict -> A dictionary containing the record of the old entity to be updated from the database
+        new_record: dict -> A dictionary containing the record of the entity to be updated to the database
+
+        Return:
+        Returns True if the record has successfully been updated, False otherwise
+        '''
+        if self.find(old_record):
+            values = tuple(new_record.values()) + tuple(old_record.values())
+            query = f'''UPDATE "{self._tblname}"
+                        SET "{self._leftkey}" = ?,
+                            "{self._rightkey}" = ?
+                        WHERE "{self._leftkey}" = ? and
+                              "{self._rightkey}" = ?;
+                        '''
+            self._executedml(query, values)
+            return True
+        else:
+            return False
+
+    def delete(self, record: dict) -> bool:
+        '''
+        Updates a record into the collection, after checking whether it is present.
+
+        Parameter:
+        record: dict -> A dictionary containing the record of the entity to be deleted from the database
+
+
+        Return:
+        Returns True if the record has successfully been deleted, False otherwise
+        '''
+        
+        if self.find(old_record):
+            values = tuple(record.values())
+            query = f'''DELETE FROM "{self._tblname}"
+                        WHERE {self._leftkey} = ? and {self._rightkey} = ?;
+                        '''
+            self._executedml(query, values)
+            return True
+        else:
+            return False
+#===========================================================================================================================================
+
+class StudentActivity(Junctiontable):
+    '''
+    A StudentActivity class used to modify the junction table between the Student class and Activity class
+    
+    Attribute:
+    (-) dbname: str -> The name of the database
+    (-) tblname: str -> The name of the junction table
+    (-) leftkey: str -> The key of the left table in the junction table
+    (-) rightkey: str -> The key of the right table in the junction table
+
+    Methods:
+    (+) find(record) -> check if a certain record exists
+    
+    (+) insert(record) -> Inserts a record into the junction table, after checking whether it is present.
+
+    (+) update(old_record, new_record) -> Updates a record in the junction table, after checking whether it is present. 
+
+    (+) delete(record) -> Delete a record in the junction table, after checking whether it is present.
+    '''
+
+    def __init__(self):
+        self._dbname = "MyWebApp.db"
+        self._tblname = "StudentActivity"
+        keys = ("student_id", "activity_id")
+
+        super().__init__(self._dbname, self._tblname, keys[0], keys[1])
+        self._create_table()
+
+    def _create_table(self):
+        """
+        A helper function used to create the table in the database for the entity collection if it does not already exists
+        """
+        
+        query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "student_id" TEXT,
+                "activity_id" TEXT,
+                Foreign Key("student_id") REFERENCES Student("id")
+                Foreign Key("activity_id") REFERENCES Activity("id")
+                );'''
+
+        with sqlite3.connect(self._dbname) as conn:
+            cur = conn.cursor()
+            cur.execute(query)
+            #conn.close()
+
+#===========================================================================================================================================
+
+
+class StudentCCA(Junctiontable):
+    '''
+    A StudentCCA class used to modify the junction table between the Student class and CCA class
+    
+    Attribute:
+    (-) dbname: str -> The name of the database
+    (-) tblname: str -> The name of the junction table
+    (-) leftkey: str -> The key of the left table in the junction table
+    (-) rightkey: str -> The key of the right table in the junction table
+
+    Methods:
+    (+) find(record) -> check if a certain record exists
+    
+    (+) insert(record) -> Inserts a record into the junction table, after checking whether it is present.
+
+    (+) update(old_record, new_record) -> Updates a record in the junction table, after checking whether it is present. 
+
+    (+) delete(record) -> Delete a record in the junction table, after checking whether it is present.
+    '''
+
+    def __init__(self):
+        self._dbname = "MyWebApp.db"
+        self._tblname = "StudentCCA"
+        keys = ("student_id", "cca_id")
+
+        super().__init__(self._dbname, self._tblname, keys[0], keys[1])
+        self._create_table()
+
+    def _create_table(self):
+        """
+        A helper function used to create the table in the database for the entity collection if it does not already exists
+        """
+        
+        query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "student_id" TEXT,
+                "cca_id" TEXT,
+                Foreign Key("student_id") REFERENCES Student("id")
+                Foreign Key("cca_id") REFERENCES CCA("id")
+                );'''
+
+        with sqlite3.connect(self._dbname) as conn:
+            cur = conn.cursor()
+            cur.execute(query)
+            #conn.close()
+#===========================================================================================================================================
+
+class StudentSubject(Junctiontable):
+    '''
+    A StudentSubject class used to modify the junction table between the Student class and Subject class
+    
+    Attribute:
+    (-) dbname: str -> The name of the database
+    (-) tblname: str -> The name of the junction table
+    (-) leftkey: str -> The key of the left table in the junction table
+    (-) rightkey: str -> The key of the right table in the junction table
+
+    Methods:
+    (+) find(record) -> check if a certain record exists
+    
+    (+) insert(record) -> Inserts a record into the junction table, after checking whether it is present.
+
+    (+) update(old_record, new_record) -> Updates a record in the junction table, after checking whether it is present. 
+
+    (+) delete(record) -> Delete a record in the junction table, after checking whether it is present.
+    '''
+
+    def __init__(self):
+        self._dbname = "MyWebApp.db"
+        self._tblname = "StudentSubject"
+        keys = ("student_id", "subject_id")
+
+        super().__init__(self._dbname, self._tblname, keys[0], keys[1])
+        self._create_table()
+
+    def _create_table(self):
+        """
+        A helper function used to create the table in the database for the entity collection if it does not already exists
+        """
+        
+        query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "student_id" TEXT,
+                "subject_id" TEXT,
+                Foreign Key("student_id") REFERENCES Student("id")
+                Foreign Key("subject_id") REFERENCES Subject("id")
+                );'''
+
+        with sqlite3.connect(self._dbname) as conn:
+            cur = conn.cursor()
+            cur.execute(query)
+            #conn.close()
 #===========================================================================================================================================

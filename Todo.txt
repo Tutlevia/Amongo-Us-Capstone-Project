@@ -1,0 +1,2 @@
+Added join table with insert/update/delete. key would be the record itself.
+Added view studentactivity, view studentcca, view class, etc
