@@ -694,7 +694,7 @@ class ActivityCollection(Collection):
                 "category" TEXT,
                 "role" TEXT,
                 "award" TEXT,
-                "hour" INT,
+                "hours" INT,
                 "cca_id" TEXT,
                 Primary Key("id")
                 Foreign Key("cca_id") REFERENCES CCA("id")

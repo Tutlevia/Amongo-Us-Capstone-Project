@@ -18,8 +18,8 @@
                 
             {% for student in form_data %}
                 <tr>
-                {% for value in student() %}
-                    <td>{{ student }}</td>
+                {% for value in student.values() %}
+                    <td>{{ value }}</td>
                 {% endfor %}
                 </tr>
             {% endfor %}

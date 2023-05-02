@@ -1,6 +1,14 @@
 from flask import Flask, render_template, request
-import storage 
-import front 
+from storage import StudentCollection, SubjectCollection, CCACollection, ClassCollection, ActivityCollection, StudentActivity, StudentCCA, StudentSubject
+
+studentCollection = StudentCollection()
+subjectCollection = SubjectCollection()
+ccaCollection = CCACollection()
+classCollection = ClassCollection()
+activityCollection = ActivityCollection()
+studentActvityCollection = StudentActivity()
+studentCCACollection = StudentCCA()
+studentSubjectCollection = StudentSubject()
 
 app = Flask(__name__)
 
@@ -40,20 +48,16 @@ def add_cca():
                                'action': '/add_cca?attempted',
                                'method': 'post'
                            },
-                           form_data =  {
-                               'id': request.form['id'],
-                               'name': request.form['name'],
-                               'type': request.form['type']
-                           }  
+                           form_data =  dict(request.form)
                           )
     if 'attempted' in request.args:
-        # record = {
-        #     'id': request.form['id'],
-        #     'name': request.form["name"],
-        #     'type': request.form['type']
-        # }
-        # insertSuccess = CCA.insert(record)
-        insertSuccess = True
+        record = {
+            'id': request.form['id'],
+            'name': request.form["name"],
+            'type': request.form['type']
+        }
+        insertSuccess = ccaCollection.insert(record)
+
         if insertSuccess is True: 
             span1 = 'Register a new CCA(Success)'
             span2 = 'The following CCA has been registered!'
@@ -63,14 +67,10 @@ def add_cca():
                                span1 = span1,
                                span2 = span2,
                                form_header = form_header,
-                               form_data =  {
-                                   'id': request.form['id'],
-                                   'name': request.form['name'],
-                                   'type': request.form['type']
-                               }      
+                               form_data = dict(request.form)
                               )
         else:
-            error = "Error: The CCA record already exists in the database!"
+            error = "Error: A CCA record with the same ID already exists in the database!"
         
     
     return render_template("add.html",
@@ -98,8 +98,10 @@ def add_activity():
     span2 = "Use the following form to register a new Activity:"
     form_header = {
                   "id": "Activity ID",
+                  "name": "Name",
                   "start_date": "Start Date (YYYYMMDD)",
                   "end_date": "End Date (YYYYMMDD)",
+                  "description": "Description",
                   "category": "Category",
                   "role": "Role",
                   "award": "Award",
@@ -114,6 +116,7 @@ def add_activity():
     error = " "
         
     if 'confirm' in request.args:
+        
         span1 = "Register a new Activity(Submission)"
         span2 = "Please confirm the following details below:"
         return render_template("add.html",
@@ -126,31 +129,23 @@ def add_activity():
                                'action': '/add_activity?attempted',
                                'method': 'post'
                            },
-                           form_data =  {
-                               'id': request.form['id'],
-                               'start_date': request.form['start_date'],
-                               'end_date': request.form['end_date'],
-                               'category': request.form['category'],
-                               'role': request.form['role'],
-                               'award': request.form['award'],
-                               'hours': request.form['hours'],
-                               'cca' : request.form['cca']
-                           }  
+                           form_data = dict(request.form)
                           )
     if 'attempted' in request.args:
-        # record = {
-        #     'id': request.form['id'],
-        #     'start_date': request.form['start_date'],
-        #     'end_date': request.form['end_date'],
-        #     'duration': request.form['duration'],
-        #     'category': request.form['category'],
-        #     'role': request.form['role'],
-        #     'award': request.form['award'],
-        #     'hours': request.form['hours'],   
-        #     'cca' : request.form['cca']
-        # }
-        # insertSuccess = Activity.insert(record)
-        insertSuccess = True
+        record = {
+            'id': request.form['id'],
+            'name': request.form['name'],
+            'start_date': request.form['start_date'],
+            'end_date': request.form['end_date'],
+            'description' : request.form['description'],
+            'category': request.form['category'],
+            'role': request.form['role'],
+            'award': request.form['award'],
+            'hours': int(request.form['hours']),   
+            'cca' : request.form['cca']
+        }
+        insertSuccess = activityCollection.insert(record)
+
         if insertSuccess is True:
             span1 = "Register a new Activity(Success)"
             span2 = "The following Activity has been registered!"
@@ -160,16 +155,7 @@ def add_activity():
                                span1 = span1,
                                span2 = span2,
                                form_header = form_header,
-                               form_data =  {
-                                   'id': request.form['id'],
-                                   'start_date': request.form['start_date'],
-                                   'end_date': request.form['end_date'],
-                                   'category': request.form['category'],
-                                   'role': request.form['role'],
-                                   'award': request.form['award'],
-                                   'hours': request.form['hours'],
-                                   'cca' : request.form['cca']
-                               }  
+                               form_data =  dict(request.form)
                               )
         else: 
             error = "Error: The activity record already exists in the database!"
@@ -188,8 +174,10 @@ def add_activity():
                            },
                            form_data = {
                                "id": " ",
+                               "name": " ",
                                "start_date": " ",
                                "end_date": " ",
+                               "description" : " ",
                                "category": " ",
                                "role": " ",
                                "award": " ",
@@ -285,14 +273,38 @@ def view_class():
     span2 = "Use the following form to view a Class"
     form_header = {"id": "Class ID"}
     error = ' '
+    record = {
+        'id' : 1,
+        'name': 2227,
+        'level': 'JC2'
+    }
+    students = [
+        {
+            'id': 1,
+            'name': 'john',
+            'class_id': 2227
+        },
+        {
+            'id': 2,
+            'name': 'nolan',
+            'class_id': 2228
+        }
+        
+    ]
+    
     
 
     if request.args:
-        record = SC.find(request.args['id'])
+        # record = SC.find(request.args['id'])
         if record != None:
             
             span1 = "View a Class(Success)"
             span2 = "Here are the Class details:"
+            form_header = {
+                           'id' : 'Class ID',
+                           'name': 'Name',
+                           'level': 'Level'
+                               }
             return render_template("view.html",
                                page_type = 'success_class',
                                title = title,
@@ -301,10 +313,11 @@ def view_class():
                                error = error,
                                form_header = form_header,
                                form_meta={
-                                   'action': '/view/class?success',
+                                   'action': '',
                                    'method': 'get'
                                },
-                               form_data =  record      
+                               form_data =  record ,
+                               students = students
                               )
         else: 
             error = f'Class ID {request.args["id"]} not found! Try again!'
@@ -317,7 +330,7 @@ def view_class():
                            error = error,
                            form_header = form_header,
                            form_meta = {
-                                'action': '',
+                                'action': '/view/class?confirm',
                                 'method': 'get'
                             },
                            form_data = {
@@ -332,12 +345,37 @@ def view_cca():
     span2 = "Use the following form to view a CCA"
     form_header = {"id": "CCA ID"}
     error = ' '
+    record = {
+        'id' : 1,
+        'name': 'Tchoukball',
+        'type': 'Sports'
+    }
+    students = [
+        {
+            'id': 1,
+            'name': 'john',
+            'class_id': 2227
+        },
+        {
+            'id': 2,
+            'name': 'nolan',
+            'class_id': 2228
+        }
+        
+    ]
 
     if request.args:
-        record = SC.find(request.args['id'])
+        # record = SC.find(request.args['id'])
         if record != None:
             span1 = "View a CCA(Success)"
             span2 = "Here are the CCA details:"
+            form_header = {
+                'id' : 'ID',
+                'name': 'Name',
+                'type': 'Type'
+            }
+
+            
             return render_template("view.html",
                                page_type = 'success_cca',
                                title = title,
@@ -346,12 +384,14 @@ def view_cca():
                                error=error,
                                form_header = form_header,
                                form_meta={
-                                   'action': '/view/cca?success',
+                                   'action': ' ',
                                    'method': 'get'
                                },
-                               form_data =  record
-                               
+                               form_data =  record,
+                               students = students
                               )
+        else:
+            error = f'CCA ID {request.args["id"]} not found! Try again!'
     
     return render_template("view.html",
                            page_type = "view_cca",
