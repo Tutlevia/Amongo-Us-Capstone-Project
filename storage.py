@@ -1,4 +1,5 @@
 import sqlite3
+from typing import Optional, Union
 
 class Collection:
     """
@@ -6,6 +7,7 @@ class Collection:
     Attributes: 
     (-) dbname: str -> The name of the database.
     (-) tblname: str -> The name of the table that the class is using.
+    (-) key: str -> Primary key for query in the table
     Methods:
     (+) insert(record) -> Inserts a record into the collection, after checking whether it is present.
     
@@ -17,8 +19,59 @@ class Collection:
 
     (+) delete(key) -> Deletes the record with a matching key.
     """
-    def __init__(self):
-        pass
+    def __init__(self, dbname: str, tblname: str, key: str) -> None:
+        self._dbname = dbname
+        self._tblname = tblname
+        self._key = key
+
+    def _executedql(self, query: str, type: str, params: tuple) -> sqlite3.Row:
+        '''
+        A helper function that is used by self.find and self.findall to execute the Data Query Language in sqlite3
+
+        Parameters:
+        query: str -> SQL query to execute
+        type: str -> Specifies the type of Search Query to execute
+        Params: tuple -> Parameterised values to be used in query
+        
+        Return:
+        result: sqlite3.Row -> the sql query result based on the query and type provided.
+        '''
+        with sqlite3.connect(self._dbname) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            result = None
+            #finding one entry in the table
+            if type == 'one':
+                cur.execute(query, params)
+                result = cur.fetchone()
+                
+            #getting all entries in the table
+            elif type == "many":
+                cur.execute(query)
+                result = cur.fetchall()
+                
+            #might want to add error message
+            else:
+                pass
+
+            #conn.close()
+            return result
+
+    def _executedml(self, query: str, params: tuple) -> None:
+        '''
+        A helper function used to execute by self.insert, self.update, self.delete to execute Data Manipulation Lanaguage in sqlite3
+
+        Parameter:
+        query: str -> sqlite3 query to be executed
+        params: tuple -> Paramterised values to be used in the query
+        '''
+        with sqlite3.connect(self._dbname) as conn:
+            cur = conn.cursor()
+            cur.execute(query, params)
+            conn.commit()
+            #conn.close()
+        return
+        
     def __repr__(self):
         pass
 
@@ -217,7 +270,7 @@ class StudentCollection(Collection):
         else:
             return False
 
-    def viewactivity(self, key: str) -> Optional[list[dict]]:
+    def viewactivity(self, key: str) -> list:
         '''
         Views all the activity of the record with the matching name.
 
@@ -345,7 +398,7 @@ class ClassCollection(Collection):
         else:
             return False
             
-    def viewstudent(self, key: str) -> Optional[list[dict]]:
+    def viewstudent(self, key: str) -> list:
         '''
         Views all the student record with the matching class id.
 
@@ -564,7 +617,7 @@ class CCACollection(Collection):
         else:
             return False
 
-    def viewstudent(self, key: str) -> Optional[list[dict]]:
+    def viewstudent(self, key: str) -> list:
         '''
         Views all the student record with the matching CCA
 
@@ -707,7 +760,7 @@ class ActivityCollection(Collection):
         else:
             return False
 
-    def viewstudent(self, key: str) -> Optional[list[dict]]:
+    def viewstudent(self, key: str) -> list:
         '''
         Views all the student record with the matching activity name.
 
@@ -829,12 +882,15 @@ class Junctiontable:
         Returns True if the record is found, False if it is not found
         '''
         query = f'''SELECT * FROM {self.tblname}
-                    WHERE {self._leftkey} = ? and {self._rightkey} = ?;'''
-        key = tuple(record.values())
-        result = self._executedql(query, "one", key)
+                    WHERE {self._leftkey} = ?;'''
+        key = record.values()
+        result = self._executedql(query, "many", (key[0],))
         if result is not None:
-            return True
+            for records in result:
+                if dict(records)[self._rightkey] == key[1]:
+                    return True
         return False
+
 
     def insert(self, record: dict) -> bool:
         '''
@@ -979,3 +1035,66 @@ class StudentCCA(Junctiontable):
         super().__init__(self._dbname, self._tblname, keys[0], keys[1])
         self._create_table()
 
+    def _create_table(self):
+        """
+        A helper function used to create the table in the database for the entity collection if it does not already exists
+        """
+        
+        query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "student_id" TEXT,
+                "cca_id" TEXT,
+                Foreign Key("student_id") REFERENCES Student("id")
+                Foreign Key("cca_id") REFERENCES CCA("id")
+                );'''
+
+        with sqlite3.connect(self._dbname) as conn:
+            cur = conn.cursor()
+            cur.execute(query)
+            #conn.close()
+#===========================================================================================================================================
+
+class StudentSubject(Junctiontable):
+    '''
+    A StudentSubject class used to modify the junction table between the Student class and Subject class
+    
+    Attribute:
+    (-) dbname: str -> The name of the database
+    (-) tblname: str -> The name of the junction table
+    (-) leftkey: str -> The key of the left table in the junction table
+    (-) rightkey: str -> The key of the right table in the junction table
+
+    Methods:
+    (+) find(record) -> check if a certain record exists
+    
+    (+) insert(record) -> Inserts a record into the junction table, after checking whether it is present.
+
+    (+) update(old_record, new_record) -> Updates a record in the junction table, after checking whether it is present. 
+
+    (+) delete(record) -> Delete a record in the junction table, after checking whether it is present.
+    '''
+
+    def __init__(self):
+        self._dbname = "MyWebApp.db"
+        self._tblname = "StudentSubject"
+        keys = ("student_id", "subject_id")
+
+        super().__init__(self._dbname, self._tblname, keys[0], keys[1])
+        self._create_table()
+
+    def _create_table(self):
+        """
+        A helper function used to create the table in the database for the entity collection if it does not already exists
+        """
+        
+        query = f'''CREATE TABLE IF NOT EXISTS "{self._tblname}"(
+                "student_id" TEXT,
+                "subject_id" TEXT,
+                Foreign Key("student_id") REFERENCES Student("id")
+                Foreign Key("subject_id") REFERENCES Subject("id")
+                );'''
+
+        with sqlite3.connect(self._dbname) as conn:
+            cur = conn.cursor()
+            cur.execute(query)
+            #conn.close()
+#===========================================================================================================================================
