@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Optional, Union
+from typing import Optional
 
 class Collection:
     """
@@ -24,7 +24,7 @@ class Collection:
         self._tblname = tblname
         self._key = key
 
-    def _executedql(self, query: str, type: str, params: tuple) -> sqlite3.Row:
+    def _executedql(self, query: str, type: str, params: tuple) -> Optional[sqlite3.Row]:
         '''
         A helper function that is used by self.find and self.findall to execute the Data Query Language in sqlite3
 
@@ -49,10 +49,10 @@ class Collection:
             elif type == "many":
                 cur.execute(query)
                 result = cur.fetchall()
-                
-            #might want to add error message
-            else:
-                pass
+
+            elif type == "join":
+                cur.execute(query, params)
+                result = cur.fetchall()
 
             #conn.close()
             return result
@@ -71,9 +71,6 @@ class Collection:
             conn.commit()
             #conn.close()
         return
-        
-    def __repr__(self):
-        pass
 
     def insert(self, record: dict) -> bool:
         '''
@@ -138,7 +135,7 @@ class Collection:
         '''
         result = self._executedql(query, "many", (None,))
 
-        if result is not None:
+        if result == []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -189,6 +186,12 @@ class StudentCollection(Collection):
     (+) delete(key) -> Deletes the record with a matching key.
 
     (+) viewactivity(key) -> Returns all activity a given student is involved in
+    
+    (+) viewclass(key) -> Returns the class of the given student
+
+    (+) viewcca(key) -> Return the cca of the given student
+
+    (+) viewall() -> Returns all information about student, their class and cca
     """
 
     def __init__(self):
@@ -219,7 +222,7 @@ class StudentCollection(Collection):
             cur.execute(query)
             #conn.close()
 
-    def insert(self, record):
+    def insert(self, record) -> bool:
         '''
         Inserts a record into the collection, after checking whether it is present.
 
@@ -270,7 +273,7 @@ class StudentCollection(Collection):
         else:
             return False
 
-    def viewactivity(self, key: str) -> list:
+    def viewactivity(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the activity of the record with the matching name.
 
@@ -285,17 +288,92 @@ class StudentCollection(Collection):
                            "Activity"."name" as "name",
                            "Activity"."start_date" as "start_date",
                            "Activity"."end_date" as "end_date"
-                           "Activity"."hour as "hour"
+                           "Activity"."hours as "hours"
                     FROM "StudentActivity"
                     INNER JOIN "{self._tblname}"
                         ON "StudentActivity"."student_id" = "{self._tblname}"."id"
                     INNER JOIN "Activity"
                         ON "StudentActivity"."activity_id" = "Activity"."id"
-                    ORDERED BY "Activity"."id";
-                    WHERE "Student"."id" = {key};
+                    WHERE "Student"."id" = ?                  
+                    ORDER BY "Activity"."id";
+                '''
+        result = self._executedql(query, "join", (key,))
+        if result == []:
+            lst = []
+            for record in result:
+                lst.append(dict(record))
+            return lst
+        else:
+            return None
+
+    def viewclass(self, key: str) -> Optional[str]:
+        '''
+        Returns the class of the given student
+
+        Parameter:
+        key: str -> the student id to be queried
+
+        Returns:
+        Returns the class of the given student if it exists, else returns None
+        '''
+
+        query = f'''
+                SELECT "Class"."name" as "class"
+                FROM "{self._tblname}"
+                INNER JOIN "Class"
+                        ON "Class"."id" = "Student"."class_id" 
+                WHERE "{self._key}" =?;
+                '''
+        result = self._executedql(query, "one", (key,))
+        if result is not None:
+            return str(dict(result)["class"])
+        else:
+            return None
+            
+    def viewccca(self, key: str) -> Optional[str]:
+        '''
+        Returns the cca of the given student
+
+        Parameter:
+        key: str -> the student id to be queried
+
+        Returns:
+        Returns the cca of the given student if it exists, else returns None
+        '''
+
+        query = f'''
+                SELECT "CCA"."name" as "CCA"
+                FROM "StudentCCA"
+                INNER JOIN "CCA"
+                       ON "StudentCCA"."cca_id" = "CCA"."id"
+                INNER JOIN "Student"
+                       ON "StudentCCA"."student_id" = "Student"."id"
+                WHERE "{self._key}" =?;
+                '''
+        result = self._executedql(query, "one", (key,))
+        if result is not None:
+            return str(dict(result)["CCA"])
+        else:
+            return None
+
+    def viewall(self) -> Optional[dict]:
+        '''
+        Returns all info about every student
+        '''
+
+        query = f'''
+                SELECT "Student"."id", "Student"."name", "Student"."student_age", "Student"."year_enrolled", "Student"."graduating_year", "CCA"."name", "Class"."name"
+                FROM StudentCCA
+                INNER JOIN "CCA"
+                       ON "StudentCCA"."cca_id" = "CCA"."id"
+                INNER JOIN "Student"
+                       ON "StudentCCA"."student_id" = "Student"."id"                           INNER JOIN "Class"
+                        ON "Class"."id" = "Student"."class_id" 
+                ORDER BY "Student"."id";
                 '''
         result = self._executedql(query, "many", (None,))
-        if result is not None:
+
+        if result == []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -350,7 +428,7 @@ class ClassCollection(Collection):
             cur.execute(query)
             #conn.close()
 
-    def insert(self, record):
+    def insert(self, record) -> bool:
         '''
         Inserts a record into the collection, after checking whether it is present.
 
@@ -398,7 +476,7 @@ class ClassCollection(Collection):
         else:
             return False
             
-    def viewstudent(self, key: str) -> list:
+    def viewstudent(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the student record with the matching class id.
 
@@ -412,14 +490,14 @@ class ClassCollection(Collection):
         query = f'''SELECT "Student"."id" as "id",
                            "Student"."name" as "name",
                            "Class"."name" as "class"
-                    FROM "Class"
+                    FROM "{self._tblname}"
                     INNER JOIN "Student"
                         ON "Class"."id" = "Student"."class_id" 
-                    ORDERED BY "Student"."id"
-                    WHERE "Class"."id" = {key};
+                    WHERE "Class"."id" = ?
+                    ORDER BY "Student"."id";                    
                 '''
-        result = self._executedql(query, "many", (None,))
-        if result is not None:
+        result = self._executedql(query, "join", (key,))
+        if result == []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -472,7 +550,7 @@ class SubjectCollection(Collection):
             cur.execute(query)
             #conn.close()
 
-    def insert(self, record):
+    def insert(self, record) -> bool:
         '''
         Inserts a record into the collection, after checking whether it is present.
 
@@ -569,7 +647,7 @@ class CCACollection(Collection):
             cur.execute(query)
             #conn.close()
 
-    def insert(self, record):
+    def insert(self, record) -> bool:
         '''
         Inserts a record into the collection, after checking whether it is present.
 
@@ -617,7 +695,7 @@ class CCACollection(Collection):
         else:
             return False
 
-    def viewstudent(self, key: str) -> list:
+    def viewstudent(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the student record with the matching CCA
 
@@ -632,17 +710,17 @@ class CCACollection(Collection):
                            "Student"."name" as "name",
                            "Class"."name" as "class"
                     FROM "StudentCCA"
+                    INNER JOIN "{self._tblname}"
+                        ON "StudentCCA"."cca_id" = "CCA"."id"
                     INNER JOIN "Student"
                         ON "StudentCCA"."student_id" = "Student"."id"
-                    INNER JOIN "CCA"
-                        ON "StudentCCA"."cca_id" = "CCA"."id"
-                    LEFT JOIN "Class"
+                    INNER JOIN "Class"
                         ON "Student"."class_id" = "Class"."id"
-                    ORDERED BY "Student"."id"
-                    WHERE "CCA"."id" = {key};
+                    WHERE "CCA"."id" = ?
+                    ORDER BY "Student"."id";
                 '''
-        result = self._executedql(query, "many", (None,))
-        if result is not None:
+        result = self._executedql(query, "join", (key,))
+        if result == []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -694,7 +772,7 @@ class ActivityCollection(Collection):
                 "category" TEXT,
                 "role" TEXT,
                 "award" TEXT,
-                "hour" INT,
+                "hourss" INT,
                 "cca_id" TEXT,
                 Primary Key("id")
                 Foreign Key("cca_id") REFERENCES CCA("id")
@@ -705,7 +783,7 @@ class ActivityCollection(Collection):
             cur.execute(query)
             #conn.close()
 
-    def insert(self, record):
+    def insert(self, record) -> bool:
         '''
         Inserts a record into the collection, after checking whether it is present.
 
@@ -751,7 +829,7 @@ class ActivityCollection(Collection):
                         "category" = ?,
                         "role" = ?,
                         "award" = ?,
-                        "hour" = ?,
+                        "hours" = ?,
                         "cca_id" = ?
                     WHERE {self._key} = ?;
             '''
@@ -760,7 +838,7 @@ class ActivityCollection(Collection):
         else:
             return False
 
-    def viewstudent(self, key: str) -> list:
+    def viewstudent(self, key: str) -> Optional[list[dict]]:
         '''
         Views all the student record with the matching activity name.
 
@@ -775,17 +853,17 @@ class ActivityCollection(Collection):
                            "Student"."name" as "name",
                            "Class"."name" as "class"
                     FROM "StudentActivity"
-                    INNER JOIN "Activity"
+                    INNER JOIN "{self._tblname}"
                         ON "StudentActivity"."student_id" = "Activity"."id"
                     INNER JOIN "Student"
                         ON "StudentActivity"."activity_id" = "Student"."id"
-                    LEFT JOIN "Class"
+                    INNER JOIN "Class"
                         ON "Student"."class_id" = "Class"."id"
-                    ORDERED BY "Student"."id"
-                    WHERE "Activity"."id" = {key};
+                    WHERE "Activity"."id" = {key}
+                    ORDER BY "Student"."id";
                 '''
-        result = self._executedql(query, "many", (None,))
-        if result is not None:
+        result = self._executedql(query, "join", (key,))
+        if result == []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -823,7 +901,7 @@ class Junctiontable:
         self._leftkey = left_key
         self._rightkey = right_key
 
-    def _executedql(self, query: str, type: str, params: tuple) -> sqlite3.Row:
+    def _executedql(self, query: str, type: str, params: tuple) -> Optional[sqlite3.Row]:
         '''
         A helper function that is used by self.find and self.findall to execute the Data Query Language in sqlite3
 
@@ -849,9 +927,9 @@ class Junctiontable:
                 cur.execute(query)
                 result = cur.fetchall()
                 
-            #might want to add error message
-            else:
-                pass
+            elif type == "join":
+                cur.execute(query, params)
+                result = cur.fetchall()
 
             #conn.close()
             return result
@@ -881,14 +959,12 @@ class Junctiontable:
         Return:
         Returns True if the record is found, False if it is not found
         '''
-        query = f'''SELECT * FROM {self.tblname}
-                    WHERE {self._leftkey} = ?;'''
-        key = record.values()
-        result = self._executedql(query, "many", (key[0],))
+        query = f'''SELECT * FROM {self._tblname}
+                    WHERE {self._leftkey} = ? and {self._rightkey} = ?;'''
+        key = tuple(record.values())
+        result = self._executedql(query, "one", key)
         if result is not None:
-            for records in result:
-                if dict(records)[self._rightkey] == key[1]:
-                    return True
+            return True
         return False
 
 
@@ -948,7 +1024,7 @@ class Junctiontable:
         Returns True if the record has successfully been deleted, False otherwise
         '''
         
-        if self.find(old_record):
+        if self.find(record):
             values = tuple(record.values())
             query = f'''DELETE FROM "{self._tblname}"
                         WHERE {self._leftkey} = ? and {self._rightkey} = ?;

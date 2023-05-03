@@ -1,6 +1,15 @@
 from flask import Flask, render_template, request
-import storage 
+import storage as s
 import front 
+
+# a = s.StudentCollection()
+# b = s.ClassCollection()
+# c = s.SubjectCollection()
+# d = s.CCACollection()
+# e = s.ActivityCollection()
+# f = s.StudentActivity()
+# g = s.StudentCCA()
+# h = s.StudentSubject()
 
 app = Flask(__name__)
 
