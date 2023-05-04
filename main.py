@@ -26,7 +26,6 @@ def internal_server_error(error):
 
 @app.route('/add_cca', methods=['GET', 'POST'])
 def add_cca():
-    print(studentActivityCollection.insert({"student_id":"1", "activity_id":"1"}))
     title = "Add a new CCA"
     span1 = "Register a new CCA"
     span2 = "Use the following form to register a new CCA:"
@@ -212,8 +211,8 @@ def view_student():
                 'class_id': 'Class ID',      
             }
             table_header = {
-                'id' : 'Activity ID',
-                'name': 'Name',
+                'activity_id' : 'Activity ID',
+                'activity_name': 'Name',
                 'start_date': 'Start Date',
                 'end_date': 'End Date',
                 'hours': 'Hours'
@@ -269,7 +268,6 @@ def view_class():
         record = classCollection.find(id)
         if record != None:
             students = classCollection.viewstudent(id)
-            print(students)
             span1 = "View a Class(Success)"
             span2 = "Here are the Class details:"
             form_header = {
@@ -278,8 +276,8 @@ def view_class():
                            'level': 'Level'
                                }
             table_header = {
-                           'id' : 'Student ID',
-                           'name': 'Student Name',
+                           'student_id' : 'Student ID',
+                           'student_name': 'Student Name',
                            'class': 'Class'
             }
             return render_template("view.html",
@@ -320,12 +318,12 @@ def view_cca():
     span2 = "Use the following form to view a CCA"
     form_header = {"id": "CCA ID"}
     error = ' '
-
     if request.args:
         id = request.args["id"].strip(" ")
         record = ccaCollection.find(id)
         if record != None:
             students = ccaCollection.viewstudent(id)
+            activities = ccaCollection.viewactivity(id)
             span1 = "View a CCA(Success)"
             span2 = "Here are the CCA details:"
             form_header = {
@@ -334,11 +332,17 @@ def view_cca():
                 'type': 'Type'
             }
             table_header = {
-                           'id' : 'Student ID',
-                           'name': 'Student Name',
+                           'student_id' : 'Student ID',
+                           'student_name': 'Student Name',
                            'class': 'Class'
             }
-            
+            table_header2 ={
+                'activity_id': 'Activity ID',
+                'activity_name': 'Activity Name',
+                'start_date': 'Start Date',
+                'end_date': 'End Date',
+                'hours': 'Hours'
+            }
             return render_template("view.html",
                                page_type = 'success_cca',
                                title = title,
@@ -346,9 +350,11 @@ def view_cca():
                                span2 = span2,
                                form_header = form_header,
                                table_header = table_header,
+                               table_header2 = table_header2,
                                form_data = {
                                    'record':record,
-                                   'students':students
+                                   'students':students,
+                                   'activities':activities
                                }
                               )
         else:
@@ -371,7 +377,7 @@ def view_cca():
                           )
 
 
-@app.route('/view/activity', methods = ['GET', 'POST']) #there is a problem here what is the primary key of the activity?
+@app.route('/view/activity', methods = ['GET', 'POST']) 
 def view_activity():
     title = 'View an Activity'
     span1 = "View an Activity"
@@ -385,7 +391,7 @@ def view_activity():
         record = activityCollection.find(id)
 
         if record != None: 
-            ccaname = ccaCollection.find(record["cca_id"],["name"])["name"]
+            cca = ccaCollection.find(record["cca_id"],["id","name"])
             students = activityCollection.viewstudent(id)
             span1 = "View an Activity(Submission)"
             span2 = "Here are the details:"
@@ -402,8 +408,8 @@ def view_activity():
                 "cca_id": 'CCA ID'
             }
             table_header = {
-                           'id' : 'Student ID',
-                           'name': 'Student Name',
+                           'student_id' : 'Student ID',
+                           'student_name': 'Student Name',
                            'class': 'Class'
             }
             
@@ -417,7 +423,7 @@ def view_activity():
                                form_data = {
                                    'record':record,
                                    'students':students,
-                                   'cca_name':ccaname
+                                   'cca':cca
                                }
                               )
         else:
@@ -460,20 +466,56 @@ def view_all_student():
                            table_header = table_header,
                            table_data = records
                           )
+@app.route('/view_all/class')
+def view_all_class():
+    title = 'View all Class'
+    span1 = 'Here are the details of all Classes'
+    table_header = ['Class ID',
+                    'Class Name',
+                    'Class Level',
+                   ]
+
+    records = classCollection.findall()
+
+    return render_template("view_all.html",
+                           page_type = "view_all_class",
+                           title = title,
+                           span1 = span1,
+                           table_header = table_header,
+                           table_data = records
+                          )
+@app.route('/view_all/cca')
+def view_all_cca():
+    title = 'View all CCA'
+    span1 = 'Here are the details of all CCAs'
+    table_header = ['CCA ID',
+                    'CCA Name',
+                    'CCA Type',
+                   ]
+
+    records = ccaCollection.findall()
+
+    return render_template("view_all.html",
+                           page_type = "view_all_cca",
+                           title = title,
+                           span1 = span1,
+                           table_header = table_header,
+                           table_data = records
+                          )
       
 @app.route('/view_all/activity')
 def view_all_activity():
     title = 'View all Activities'
     span1 = 'Here are the details of all Activities'
     table_header = ['Activity ID',
-                    'Acitity Name',
+                    'Activity Name',
                     'Start Date',
                     'End Date',
                     'Hours'
                    ]
     columns = ['id', 'name', 'start_date', 'end_date', 'hours']
     records = activityCollection.findall(columns)
-    print(records)
+
     return render_template("view_all.html",
                            page_type = 'view_all_activities',
                            title = title,
@@ -489,20 +531,13 @@ def edit_cca():
     span2 = "Use the following form to update a CCA membership:"
     form_header  = {"student_id": "Student ID",
                    'id': ' Student ID',
-                   'name': 'Name'}
+                   'name': 'Name',
+                   'CCA_id': 'CCA ID',
+                   'CCA_name': 'CCA Name'}
+    ccalist = ccaCollection.findall(["id","name"])
     error = " "
     updateSuccess = True
     insertSuccess = True
-    cca_data = [
-        {
-        "id": "1",
-        "name": "Tchoukball"
-    },
-        {
-        "id": "2",
-        "name": "toiletcleaner"
-        }
-    ]
     if 'addattempted' in request.args:
         new_record = {"student_id":request.form["student_id"],
                       "cca_id":request.form["cca_id"]}
@@ -514,9 +549,8 @@ def edit_cca():
             
             span1 = "Add a CCA Membership (Success)"
             span2 = "The CCA Membership has been successfully added!"
-            form_header = {
-                'id':'CCA ID',
-                'name': 'Name'
+            form_header = {'id':'CCA ID',
+                           'name': 'CCA Name'
             }
             return render_template("edit.html",
                            page_type = 'success',
@@ -527,18 +561,14 @@ def edit_cca():
                            form_data = {
                                'id': ccaRecord['id'],
                                'name': ccaRecord['name']
-                           }
+                           },
+                           student_id = request.form['student_id']
                            )
     if 'add' in request.args:
-            studentRecord = studentCollection.find(request.form["student_id"])
+            studentRecord = studentCollection.find(request.form["student_id"],["id","name"])
             span1 = "Add a CCA to this Student"
             span2 = "Use the following form to add a CCA to this student:"
-            ccalist = [{'name':"Tchoukball",
-                 'id':'1'
-               }, 
-               {'name':"toiletcleaner",
-                'id':'2'
-               }]
+
             return render_template("edit.html",
                        page_type = 'add_cca',
                        title = title,
@@ -555,12 +585,12 @@ def edit_cca():
                        ccalist = ccalist
                       )
     if 'updateattempted' in request.args:
-        # old_record = {"student_id":request.form["student_id"], 
-        #               "cca_id":request.form["old_cca_id"]}
-        # new_record = {"student_id":request.form["student_id"], 
-        #               "cca_id":request.form["new_cca_id"]}
-        # updateSuccess = studentCCACollection.update(old_record, new_record)
-        updateSuccess = True
+        old_record = {"student_id":request.form["student_id"], 
+                      "cca_id":request.form["old_cca_id"]}
+        new_record = {"student_id":request.form["student_id"], 
+                      "cca_id":request.form["new_cca_id"]}
+        updateSuccess = studentCCACollection.update(old_record, new_record)
+
         if updateSuccess is False:
             error = "Error: The new record already exists in the database!"
         else:
@@ -570,7 +600,7 @@ def edit_cca():
             span2 = "The CCA Membership has been successfully updated!"
             form_header = {
                 'id':'New CCA ID',
-                'name': 'New Name'
+                'name': 'New CCA Name'
             }
             
             return render_template("edit.html",
@@ -582,18 +612,12 @@ def edit_cca():
                            form_data = {
                                'id': ccaRecord['id'],
                                'name': ccaRecord['name']
-                           }
+                           },
+                           student_id = request.form['student_id']
                            )
     if 'confirm' in request.args: 
-            studentRecord = studentCollection.find(request.form['student_id'])
+            studentRecord = studentCollection.find(request.form['student_id'], ['id', 'name'])
             ccaRecord = ccaCollection.find(request.form['cca_id'])
-        
-            ccalist = [{'name':"Tchoukball",
-                 'id':'1'
-               }, 
-               {'name':"toiletcleaner",
-                'id':'2'
-               }]
         
             return render_template("edit.html",
                        page_type = 'confirm_cca',
@@ -613,9 +637,12 @@ def edit_cca():
                       )
     
     if 'check' in request.args or updateSuccess is False or insertSuccess is False:
-        record = studentCollection.find(request.form['student_id'].strip(" "))
+        id = request.form['student_id'].strip(" ")
+        record = studentCollection.find(id, ['id','name'])
 
         if record is not None:
+            cca_data = studentCollection.viewcca(id)
+            
             span1 = "Edit this Student's CCA"
             span2 = "Please edit the Student's CCA details below:"
             return render_template("edit.html",
@@ -659,20 +686,17 @@ def edit_activity():
     span2 = "Use the following form to update a Activity participation:"
     form_header  = {"student_id": "Student ID",
                    'id': ' Student ID',
-                   'name': 'Name'}
+                   'name': 'Name',
+                   'activity_id': "Activity ID",
+                   'activity_name': "Activity Name",
+                   'start_date': "Start Date",
+                   'end_date': "End Date",
+                   'hours': "Hours"}
     error = " "
     updateSuccess = True
     insertSuccess = True
-    activity_data = [
-        {
-        "id": "1",
-        "name": "Beach Clean Up"
-    },
-        {
-        "id": "2",
-        "name": "Elderly Home"
-        }
-    ]
+    activitylist = activityCollection.findall(['id','name'])
+    
     if 'addattempted' in request.args:
         new_record = {"student_id":request.form["student_id"],
                       "activity_id":request.form["activity_id"]}
@@ -681,7 +705,6 @@ def edit_activity():
             error = "Error: The new record already exists in the database!"
         else:
             activityRecord = activityCollection.find(request.form['activity_id'])
-            
             span1 = "Add an Activity Participation (Success)"
             span2 = "The Activity Participation has been successfully added!"
             form_header = {
@@ -697,19 +720,13 @@ def edit_activity():
                            form_data = {
                                'id': activityRecord['id'],
                                'name': activityRecord['name']
-                           }
+                           },
+                           student_id = request.form['student_id']
                            )
-
     if 'add' in request.args:
-            studentRecord = studentCollection.find(request.form["student_id"])
+            studentRecord = studentCollection.find(request.form["student_id"],['id','name'])
             span1 = "Add an Activity to this Student"
             span2 = "Use the following form to add an Activity to this student:"
-            activitylist = [{'name':"Beach Clean Up",
-                 'id':'1'
-               }, 
-               {'name':"Elderly Home",
-                'id':'2'
-               }]
             return render_template("edit.html",
                        page_type = 'add_activity',
                        title = title,
@@ -727,12 +744,11 @@ def edit_activity():
                       )
     
     if 'updateattempted' in request.args:
-        # old_record = {"student_id":request.form["student_id"], 
-        #               "cca_id":request.form["old_activity_id"]}
-        # new_record = {"student_id":request.form["student_id"], 
-        #               "cca_id":request.form["new_activity_id"]}
-        # updateSuccess = studentActivityCollection.update(old_record, new_record)
-        updateSuccess = True
+        old_record = {"student_id":request.form["student_id"], 
+                      "cca_id":request.form["old_activity_id"]}
+        new_record = {"student_id":request.form["student_id"], 
+                      "cca_id":request.form["new_activity_id"]}
+        updateSuccess = studentActivityCollection.update(old_record, new_record)
         if updateSuccess is False:
             error = "Error: The new record already exists in the database!"
         else:
@@ -742,7 +758,7 @@ def edit_activity():
             span2 = "The Activity Participation has been successfully updated!"
             form_header = {
                 'id':'New Activity ID',
-                'name': 'New Name'
+                'name': 'New Activity Name'
             }
             
             return render_template("edit.html",
@@ -754,19 +770,13 @@ def edit_activity():
                            form_data = {
                                'id': activityRecord['id'],
                                'name': activityRecord['name']
-                           }
+                           },
+                           student_id = request.form['student_id']
                            )
             
     if 'confirm' in request.args: 
-            studentRecord = studentCollection.find(request.form['student_id'])
+            studentRecord = studentCollection.find(request.form['student_id'],['id','name'])
             activityRecord = activityCollection.find(request.form['activity_id'])
-        
-            activitylist = [{'name':"Beach Clean Up",
-                 'id':'1'
-               }, 
-               {'name':"Elderly Home",
-                'id':'2'
-               }]
         
             return render_template("edit.html",
                        page_type = 'confirm_activity',
@@ -786,9 +796,11 @@ def edit_activity():
                       )
 
     if 'check' in request.args or updateSuccess is False or insertSuccess is False:
-        record = studentCollection.find(request.form['student_id'].strip(" "))
+        id = request.form['student_id'].strip(" ")
+        record = studentCollection.find(id,['id','name'])
 
         if record is not None:
+            activity_data = studentCollection.viewactivity(id)
             span1 = "Edit this Student's Activity participation"
             span2 = "Please edit the Student's Activity participation details below:"
             return render_template("edit.html",
@@ -824,12 +836,6 @@ def edit_activity():
                                'student_id':  ' '
                            }
                           )
-                          
-
+    
 if __name__ == '__main__':
     app.run('0.0.0.0')
-
-
-#click on name go to another page
-#or have multiple links, student activity link, student cca link,
-#will have a query to pass on to the respective pages

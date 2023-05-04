@@ -52,13 +52,8 @@
         {% elif 'success' in page_type %}
             </br>
             {% for name, value in form_data['record'].items() %}
-                {% if name == 'cca_id' %}
-                {{form_header[name]}} : {{value}} ({{form_data['cca_name']}})
-                 </br>
-                {% else %}
                 {{form_header[name]}} : {{value}}
                  </br>
-                {% endif %}
             {% endfor %}
             
             {% if 'student' in page_type %} <!-- This is for student -->
@@ -77,8 +72,8 @@
                         {% for activity in form_data['activities'] %}
                             <tr>
                             {% for name, value in activity.items() %}
-                                {% if name == "name" %}
-                                    <td> <a href="/view/activity?id={{activity['id']}}">{{value}}</a></td>
+                                {% if name == "activity_name" %}
+                                    <td> <a href="/view/activity?id={{activity['activity_id']}}">{{value}}</a></td>
                                     
                                 {% else %}
                                     <td>{{value}}</td>
@@ -131,8 +126,8 @@
                         {% for student in form_data['students'] %}
                             <tr>
                             {% for name, value in student.items() %}
-                                {% if name == "name" %}
-                                    <td> <a href="/view/student?id={{student['id']}}">{{value}}</a></td>
+                                {% if name == "student_name" %}
+                                    <td> <a href="/view/student?id={{student['student_id']}}">{{value}}</a></td>
                                     
                                 {% else %}
                                     <td>{{value}}</td>
@@ -163,8 +158,8 @@
                         {% for student in form_data['students'] %}
                             <tr>
                             {% for name, value in student.items() %}
-                                {% if name == "name" %}
-                                    <td> <a href="/view/student?id={{student['id']}}">{{value}}</a></td>
+                                {% if name == "student_name" %}
+                                    <td> <a href="/view/student?id={{student['student_id']}}">{{value}}</a></td>
                                     
                                 {% else %}
                                     <td>{{value}}</td>
@@ -180,9 +175,40 @@
     
                 {% endif %}
 
+                <p> Activities organised by CCA: </p>
+                {% if form_data['activities'] != None %}
+                    <table> 
+                        <tr>
+                        {% for header in form_data['activities'][0].keys() %} 
+                            <td> {{table_header2[header]}} </td>
+                        {% endfor %}
+                        </tr>
+    
+                        {% for activity in form_data['activities'] %}
+                            <tr>
+                            {% for name, value in activity.items() %}
+                                {% if name == "activity_name" %}
+                                    <td> <a href="/view/activity?id={{activity['activity_id']}}">{{value}}</a></td>
+                                    
+                                {% else %}
+                                    <td>{{value}}</td>
+                                {% endif %}
+                            {% endfor %} 
+                            </tr>
+                        {% endfor %}
+                                    
+                    </table>
+                
+                    {% else %}
+                        <p> No activities found.</p>
+    
+                {% endif %}
+            
             {% endif %} <!-- End for cca -->
 
             {% if 'activity' in page_type %} <!-- This is for activity -->
+                <p>CCA Name:     
+                <a href="/view/cca?id={{form_data['cca']['id']}}">{{form_data['cca']['name']}}</a></p>
                 <p> Students involved : </p>
                 {%if form_data['students'] != None %}
                     <table> 
@@ -197,8 +223,8 @@
                         {% for student in form_data['students'] %}
                             <tr>
                             {% for name, value in student.items() %}
-                                {% if name == "name" %}
-                                    <td> <a href="/view/student?id={{student['id']}}">{{value}}</a></td>
+                                {% if name == "student_name" %}
+                                    <td> <a href="/view/student?id={{student['student_id']}}">{{value}}</a></td>
                                     
                                 {% else %}
                                     <td>{{ value }}</td>

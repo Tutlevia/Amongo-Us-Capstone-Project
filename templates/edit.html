@@ -14,7 +14,14 @@
             </br></br>
             <span> {{span2}} </span>
 
-        {% if 'cca' in page_type %}
+        {% if 'success' in page_type %}
+            </br>
+            {% for name, value in form_data.items() %}
+                {{form_header[name]}} : {{value}}
+                </br>
+            {% endfor %}
+            <p><a href ="/view/student?id={{student_id}}">View the Student's updated record</a></p>
+        {% elif 'cca' in page_type %}
 
             {% if 'edit' in page_type %}
                 
@@ -69,7 +76,7 @@
                     <table> 
                         <tr>
                         {% for header in cca_data[0].keys() %} 
-                            <td> {{header}} </td>
+                            <td> {{form_header[header]}} </td>
                         {% endfor %}
                         <td> Update</td>
                         </tr>
@@ -82,7 +89,7 @@
 
                             {% endfor %}
                             <td colspan = "2" align = "right" >
-                                <button type='submit' name = 'cca_id' value= {{cca['id']}}>
+                                <button type='submit' name = 'cca_id' value= {{cca['CCA_id']}}>
                                     Update
                                 </button>
                             </td>
@@ -103,7 +110,7 @@
                     <input type = "submit" value = "Add a new CCA">
 
     
-            {% elif 'confirm_cca' in page_type %}
+            {% elif 'confirm' in page_type %}
                 </br>
                 {% for name, value in form_data['studentRecord'].items() %}
                     {{form_header[name]}} : {{value}}
@@ -146,7 +153,7 @@
     
                 </form>
     
-            {% elif 'add_cca' in page_type %}
+            {% elif 'add' in page_type %}
                 </br>
                 {% for name, value in form_data['studentRecord'].items() %}
                     {{form_header[name]}} : {{value}}
@@ -184,13 +191,6 @@
                 </table>
     
                 </form>
-                        
-            {% elif 'success' in page_type %}
-            </br>
-            {% for name, value in form_data.items() %}
-                {{form_header[name]}} : {{value}}
-                 </br>
-            {% endfor %}
             
             {% endif %}
 
@@ -248,7 +248,7 @@
                     <table> 
                         <tr>
                         {% for header in activity_data[0].keys() %} 
-                            <td> {{header}} </td>
+                            <td> {{form_header[header]}} </td>
                         {% endfor %}
                         <td> Update</td>
                         </tr>
@@ -261,7 +261,7 @@
 
                             {% endfor %}
                             <td colspan = "2" align = "right" >
-                                <button type='submit' name = 'activity_id' value= {{activity['id']}}>
+                                <button type='submit' name = 'activity_id' value= {{activity['activity_id']}}>
                                     Update
                                 </button>
                             </td>
@@ -281,7 +281,7 @@
                     <input type = "hidden" name = 'student_id' value ={{form_data['id']}}> 
                     <input type = "submit" value = "Add a new Activity">
 
-            {% elif 'confirm_activity' in page_type %}
+            {% elif 'confirm' in page_type %}
                 </br>
                 {% for name, value in form_data['studentRecord'].items() %}
                     {{form_header[name]}} : {{value}}
@@ -324,7 +324,7 @@
     
                 </form>
 
-            {% elif 'add_activity' in page_type %}
+            {% elif 'add' in page_type %}
                 </br>
                 {% for name, value in form_data['studentRecord'].items() %}
                     {{form_header[name]}} : {{value}}
@@ -362,15 +362,6 @@
                 </table>
     
                 </form>
-
-            {% elif 'success' in page_type %}
-            </br>
-            {% for name, value in form_data.items() %}
-                {{form_header[name]}} : {{value}}
-                 </br>
-            {% endfor %}
-            
-
             {% endif %}
                      
 
