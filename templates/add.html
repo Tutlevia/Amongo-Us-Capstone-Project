@@ -70,10 +70,15 @@
 
         
             {% for name, value in form_data.items() %}
-            {{form_header[name]}} : {{value}}
+                {% if name == 'cca' %}
+                {{form_header[name]}} : {{value}} ({{cca_name}})
+                 </br>
+            <input id= '{{ name }}' type='hidden' name= '{{ name }}' value='{{ value }}'>
+                {% else %}
+                {{form_header[name]}} : {{value}}
              </br>
             <input id= '{{ name }}' type='hidden' name= '{{ name }}' value='{{ value }}'>
-             
+                {% endif %}
             {% endfor %}
             <input type='submit' value='Yes'>
             <input type='button' value='No' onclick="history.back()">
@@ -82,8 +87,14 @@
         {% elif 'success' in page_type %}
         </br>
         {% for name, value in form_data.items() %}
-            {{form_header[name]}} : {{value}}
-             </br>
+            {% if name == 'cca' %}
+                {{form_header[name]}} : {{value}} ({{cca_name}})
+                </br>
+            {% else %}
+                {{form_header[name]}} : {{value}}
+                </br>
+            {% endif %}
+             
         {% endfor %}
             
      

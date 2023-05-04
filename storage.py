@@ -97,21 +97,21 @@ class Collection:
         Returns True if the record has successfully been added, False otherwise
         '''
         raise NotImplementedError
-        
-    def find(self, key: str, column: list[str] = ["*"]) -> Optional[dict]:
+    
+    def find(self, key: str, columns: list[str] = ["*"]) -> Optional[dict]:
         '''
         Finds the record with a matching key and returns a copy of it.
 
         Parameter:
         key: str -> Primary key used to identify the entity in the table
-        column: list[str] -> Argument used to select which columns in a table to be returned. Defaults to returning all column in a table.
+        columns: list[str] -> Argument used to select which columns in a table to be returned. Defaults to returning all column in a table.
 
         Return:
         Returns the record of the entity in the form of a dictionary if found, else returns None
         '''
-
+        querycolumns = ','.join(columns)
         query = f'''
-                SELECT {str(column)[1:-1]} FROM "{self._tblname}"
+                SELECT {querycolumns} FROM "{self._tblname}"
                 WHERE "{self._key}" =?;
         '''
         result = self._executedql(query, "one", (key,))
@@ -120,19 +120,20 @@ class Collection:
         else:
             return None
 
-    def findall(self) -> Optional[list[dict]]:
+    def findall(self, columns: list[str] = ["*"]) -> Optional[list[dict]]:
         '''
         Finds all entities in the table
 
         Parameter:
-        None
+        columns: list[str] -> Argument used to select which columns in a table to be returned. Defaults to returning all column in a table.
 
         Return:
         Returns a list of dictionary storing all entities in the table if the table is not empty, else return None
         '''
-
+        querycolumns = ','.join(columns)
         query = f'''
-                SELECT * FROM "{self._tblname}";
+                SELECT {querycolumns} FROM "{self._tblname}"
+                ORDER BY ABS("{self._key}");
         '''
         result = self._executedql(query, "many", (None,))
 
@@ -192,7 +193,7 @@ class StudentCollection(Collection):
 
     (+) viewcca(key) -> Return all cca info a given student is in
 
-    (+) viewall() -> Returns all information about student, their class and cca
+    (+) viewall() -> Returns all information about student and their class
     """
 
     def __init__(self):
@@ -296,7 +297,7 @@ class StudentCollection(Collection):
                     INNER JOIN "Activity"
                         ON "StudentActivity"."activity_id" = "Activity"."id"
                     WHERE "Student"."id" = ?                  
-                    ORDER BY "Activity"."id";
+                    ORDER BY ABS("Activity"."id");
                 '''
         result = self._executedql(query, "join", (key,))
         if result != []:
@@ -319,7 +320,7 @@ class StudentCollection(Collection):
         '''
 
         query = f'''
-                SELECT "Class"."name" as "class_name", "Class"."id" as "class_id"
+                SELECT "Class"."id" as "class_id", "Class"."name" as "class_name"
                 FROM "{self._tblname}"
                 INNER JOIN "Class"
                         ON "Class"."id" = "{self._tblname}"."class_id" 
@@ -343,17 +344,21 @@ class StudentCollection(Collection):
         '''
 
         query = f'''
-                SELECT "CCA"."name" as "CCA_name", "CCA"."id" as "CCA_id"
+                SELECT "CCA"."id" as "CCA_id", "CCA"."name" as "CCA_name"
                 FROM "StudentCCA"
                 INNER JOIN "{self._tblname}"
                        ON "StudentCCA"."student_id" = "{self._tblname}"."{self._key}"
                 INNER JOIN "CCA"
                        ON "StudentCCA"."cca_id" = "CCA"."id"
-                WHERE "{self._tblname}"."{self._key}" = ?;
+                WHERE "{self._tblname}"."{self._key}" = ?
+                ORDER BY ABS("CCA"."id");
                 '''
-        result = self._executedql(query, "one", (key,))
-        if result is not None:
-            return dict(result)
+        result = self._executedql(query, "join", (key,))
+        if result != []:
+            lst = []
+            for record in result:
+                lst.append(dict(record))
+            return lst
         else:
             return None
 
@@ -363,23 +368,17 @@ class StudentCollection(Collection):
         '''
 
         query = f'''
-                SELECT "Student"."id" as "student_id",
-                       "Student"."name" as "student_name", 
-                       "Student"."student_age" as "student_age", 
-                       "Student"."year_enrolled" as "student_year_enrolled", 
-                       "Student"."graduating_year" as "student_graduating_year", 
-                       "Class"."name" as "class_name",
+                SELECT "{self._tblname}"."id" as "student_id",
+                       "{self._tblname}"."name" as "student_name", 
+                       "{self._tblname}"."student_age" as "student_age", 
+                       "{self._tblname}"."year_enrolled" as "student_year_enrolled", 
+                       "{self._tblname}"."graduating_year" as "student_graduating_year", 
                        "Class"."id" as "class_id",
-                       "CCA"."name" as "cca_name", 
-                       "CCA"."id" as "cca.id"
-                FROM StudentCCA
-                INNER JOIN "{self._tblname}"
-                       ON "StudentCCA"."student_id" = "{self._tblname}"."{self._key}"
-                INNER JOIN "CCA"
-                       ON "StudentCCA"."cca_id" = "CCA"."id"
+                       "Class"."name" as "class_name"
+                FROM "{self._tblname}"
                 INNER JOIN "Class"
                        ON "Class"."id" = "Student"."class_id" 
-                ORDER BY "{self._tblname}"."{self._key}";
+                ORDER BY ABS("{self._tblname}"."{self._key}");
                 '''
         result = self._executedql(query, "many", (None,))
 
@@ -498,12 +497,12 @@ class ClassCollection(Collection):
         '''
         query = f'''SELECT "Student"."id" as "id",
                            "Student"."name" as "name",
-                           "Class"."name" as "class"
+                           "{self._tblname}"."name" as "class"
                     FROM "{self._tblname}"
                     INNER JOIN "Student"
                         ON "{self._tblname}"."{self._key}" = "Student"."class_id" 
-                    WHERE "{self._key}" = ?
-                    ORDER BY "Student"."id";                    
+                    WHERE "{self._tblname}"."{self._key}" = ?
+                    ORDER BY ABS("Student"."id");                    
                 '''
         result = self._executedql(query, "join", (key,))
         if result != []:
@@ -726,7 +725,7 @@ class CCACollection(Collection):
                     INNER JOIN "Class"
                         ON "Student"."class_id" = "Class"."id"
                     WHERE "{self._tblname}"."{self._key}" = ?
-                    ORDER BY "Student"."id";
+                    ORDER BY ABS("Student"."id");
                 '''
         result = self._executedql(query, "join", (key,))
         if result != []:
@@ -863,12 +862,12 @@ class ActivityCollection(Collection):
                            "Class"."name" as "class"
                     FROM "StudentActivity"
                     INNER JOIN "{self._tblname}"
-                        ON "StudentActivity"."student_id" = "{self._tblname}"."{self._key}"
+                        ON "StudentActivity"."student_id" = "Student"."id"
                     INNER JOIN "Student"
-                        ON "StudentActivity"."activity_id" = "Student"."id"
+                        ON "StudentActivity"."activity_id" = "{self._tblname}"."{self._key}"
                     INNER JOIN "Class"
                         ON "Student"."class_id" = "Class"."id"
-                    WHERE "{self._tblname}"."{self._key}" = {key}
+                    WHERE "{self._tblname}"."{self._key}" = ?
                     ORDER BY "Student"."id";
                 '''
         result = self._executedql(query, "join", (key,))

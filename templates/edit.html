@@ -14,48 +14,49 @@
             </br></br>
             <span> {{span2}} </span>
 
-        {% if 'edit' in page_type %}
-            
-            <form 
-            action = "{{ form_meta['action'] }}"
-            method = "{{ form_meta['method'] }}"
-            >
+        {% if 'cca' in page_type %}
 
-        <table>
-            {% for name, value in form_data.items() %}
-            <tr>
-                <td>
-                    <label for= '{{ name }}'>
-                    {{form_header[name]}}
-                    </label>
-                </td>
-
-                <td>
-                    <input id= '{{ name }}' type='text' name= '{{ name }}' value='{{ value }}' >
-                </td>
-            </tr>
-            
-            {% endfor %}
-
-            <tr>
-                <td colspan = "2" align = "right" >
-                    <input type='submit' value='Submit'>
-                    
-                </td>
+            {% if 'edit' in page_type %}
                 
-            </tr>
-            
-        </table>
-        </form>
-
-        {% elif 'check' in page_type %}
-            </br>
-            {% for name, value in form_data.items() %}
-                {{form_header[name]}} : {{value}}
-                 </br>
-            {% endfor %}
-
-            {% if 'cca' in page_type %}         
+                <form 
+                action = "{{ form_meta['action'] }}"
+                method = "{{ form_meta['method'] }}"
+                >
+    
+            <table>
+                {% for name, value in form_data.items() %}
+                <tr>
+                    <td>
+                        <label for= '{{ name }}'>
+                        {{form_header[name]}}
+                        </label>
+                    </td>
+    
+                    <td>
+                        <input id= '{{ name }}' type='text' name= '{{ name }}' value='{{ value }}' >
+                    </td>
+                </tr>
+                
+                {% endfor %}
+    
+                <tr>
+                    <td colspan = "2" align = "right" >
+                        <input type='submit' value='Submit'>
+                        
+                    </td>
+                    
+                </tr>
+                
+            </table>
+            </form>
+    
+            {% elif 'check' in page_type %}
+                </br>
+                {% for name, value in form_data.items() %}
+                    {{form_header[name]}} : {{value}}
+                     </br>
+                {% endfor %}
+       
                 <p> Student's CCAs: </p>
                 {%if cca_data != None %}
                     <form 
@@ -100,98 +101,281 @@
 
                     <input type = "hidden" name = 'student_id' value ={{form_data['id']}}> 
                     <input type = "submit" value = "Add a new CCA">
+
+    
+            {% elif 'confirm_cca' in page_type %}
+                </br>
+                {% for name, value in form_data['studentRecord'].items() %}
+                    {{form_header[name]}} : {{value}}
+                     </br>
+                {% endfor %}
+    
+                <form 
+                        action = "{{ form_meta['action'] }}"
+                        method = "{{ form_meta['method'] }}"
+                >
+                <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
+                <input type='hidden' name= 'old_cca_id' value='{{form_data["ccaRecord"]["id"]}}'>
+                <table>
+                <tr>
+                    <td>
+                    <label for= 'cca'>
+                    CCA Name:
+                    </label>
+                    </td>
+                    
+                    <td>
+                        <select id = 'cca' name = 'new_cca_id'>
+                            {% for cca in ccalist %}
+                                {% if cca["name"] == form_data['ccaRecord']['name'] %}
+                                <option value = '{{cca["id"]}}' selected='selected'>{{cca["name"]}}</option>
+                                {% else %}
+                                <option value = '{{cca["id"]}}'>{{cca["name"]}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+    
+                <tr>
+                    <td colspan = "2" align = "right" >
+                        <input type='submit' value='Submit'>
+                    </td>
+                </tr>
+                </table>
+    
+                </form>
+    
+            {% elif 'add_cca' in page_type %}
+                </br>
+                {% for name, value in form_data['studentRecord'].items() %}
+                    {{form_header[name]}} : {{value}}
+                     </br>
+                {% endfor %}
+    
+                <form 
+                        action = "{{ form_meta['action'] }}"
+                        method = "{{ form_meta['method'] }}"
+                >
+                <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
+            
+                <table>
+                <tr>
+                    <td>
+                    <label for= 'cca'>
+                    CCA Name:
+                    </label>
+                    </td>
+                    
+                    <td>
+                        <select id = 'cca' name = 'cca_id'>
+                            {% for cca in ccalist %}
+                                <option value = '{{cca["id"]}}'>{{cca["name"]}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+    
+                <tr>
+                    <td colspan = "2" align = "right" >
+                        <input type='submit' value='Submit'>
+                    </td>
+                </tr>
+                </table>
+    
+                </form>
+                        
+            {% elif 'success' in page_type %}
+            </br>
+            {% for name, value in form_data.items() %}
+                {{form_header[name]}} : {{value}}
+                 </br>
+            {% endfor %}
+            
             {% endif %}
 
-        {% elif 'confirm_cca' in page_type %}
-            </br>
-            {% for name, value in form_data['studentRecord'].items() %}
-                {{form_header[name]}} : {{value}}
-                 </br>
-            {% endfor %}
-
-            <form 
-                    action = "{{ form_meta['action'] }}"
-                    method = "{{ form_meta['method'] }}"
-            >
-            <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
-            <input type='hidden' name= 'old_cca_id' value='{{form_data["ccaRecord"]["id"]}}'>
-            <table>
-            <tr>
-                <td>
-                <label for= 'cca'>
-                CCA Name:
-                </label>
-                </td>
+        {% elif 'activity' in page_type %}
+            {% if 'edit' in page_type %}
                 
-                <td>
-                    <select id = 'cca' name = 'new_cca_id'>
-                        {% for cca in ccalist %}
-                            {% if cca["name"] == form_data['ccaRecord']['name'] %}
-                            <option value = '{{cca["id"]}}' selected='selected'>{{cca["name"]}}</option>
-                            {% else %}
-                            <option value = '{{cca["id"]}}'>{{cca["name"]}}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </td>
-            </tr>
-
-            <tr>
-                <td colspan = "2" align = "right" >
-                    <input type='submit' value='Submit'>
-                </td>
-            </tr>
-            </table>
-
-            </form>
-
-        {% elif 'add_cca' in page_type %}
-            </br>
-            {% for name, value in form_data['studentRecord'].items() %}
-                {{form_header[name]}} : {{value}}
-                 </br>
-            {% endfor %}
-
-            <form 
-                    action = "{{ form_meta['action'] }}"
-                    method = "{{ form_meta['method'] }}"
-            >
-            <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
-        
+                <form 
+                action = "{{ form_meta['action'] }}"
+                method = "{{ form_meta['method'] }}"
+                >
+    
             <table>
-            <tr>
-                <td>
-                <label for= 'cca'>
-                CCA Name:
-                </label>
-                </td>
+                {% for name, value in form_data.items() %}
+                <tr>
+                    <td>
+                        <label for= '{{ name }}'>
+                        {{form_header[name]}}
+                        </label>
+                    </td>
+    
+                    <td>
+                        <input id= '{{ name }}' type='text' name= '{{ name }}' value='{{ value }}' >
+                    </td>
+                </tr>
                 
-                <td>
-                    <select id = 'cca' name = 'cca_id'>
-                        {% for cca in ccalist %}
-                            <option value = '{{cca["id"]}}'>{{cca["name"]}}</option>
-                        {% endfor %}
-                    </select>
-                </td>
-            </tr>
-
-            <tr>
-                <td colspan = "2" align = "right" >
-                    <input type='submit' value='Submit'>
-                </td>
-            </tr>
-            </table>
-
-            </form>
+                {% endfor %}
+    
+                <tr>
+                    <td colspan = "2" align = "right" >
+                        <input type='submit' value='Submit'>
+                        
+                    </td>
                     
-        {% elif 'success' in page_type %}
-        </br>
-        {% for name, value in form_data.items() %}
-            {{form_header[name]}} : {{value}}
-             </br>
-        {% endfor %}
-        
+                </tr>
+                
+            </table>
+            </form>
+
+            {% elif 'check' in page_type %}
+                </br>
+                {% for name, value in form_data.items() %}
+                    {{form_header[name]}} : {{value}}
+                     </br>
+                {% endfor %}
+       
+                <p> Student's Activity: </p>
+                {%if activity_data != None %}
+                    <form 
+                    action = "{{ form_meta['action'] }}"
+                    method = "{{ form_meta['method'] }}"
+                    >
+
+                    <input type = "hidden" name = 'student_id' value = {{form_data['id']}}> 
+                        
+                    <table> 
+                        <tr>
+                        {% for header in activity_data[0].keys() %} 
+                            <td> {{header}} </td>
+                        {% endfor %}
+                        <td> Update</td>
+                        </tr>
+    
+                        {% for activity in activity_data %}
+                            <tr>
+                            {% for name, value in activity.items() %}
+                                
+                                <td>{{value}}</td>
+
+                            {% endfor %}
+                            <td colspan = "2" align = "right" >
+                                <button type='submit' name = 'activity_id' value= {{activity['id']}}>
+                                    Update
+                                </button>
+                            </td>
+                            </tr>
+                        {% endfor %}
+                                    
+                    </table>
+                    </form>
+                {% else %}
+                    <p>No Activity found.</p>
+                {% endif %}
+                <form 
+                    action = "{{ form_meta['action2'] }}"
+                    method = "{{ form_meta['method'] }}"
+                    >
+
+                    <input type = "hidden" name = 'student_id' value ={{form_data['id']}}> 
+                    <input type = "submit" value = "Add a new Activity">
+
+            {% elif 'confirm_activity' in page_type %}
+                </br>
+                {% for name, value in form_data['studentRecord'].items() %}
+                    {{form_header[name]}} : {{value}}
+                     </br>
+                {% endfor %}
+    
+                <form 
+                        action = "{{ form_meta['action'] }}"
+                        method = "{{ form_meta['method'] }}"
+                >
+                <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
+                <input type='hidden' name= 'old_activity_id' value='{{form_data["activityRecord"]["id"]}}'>
+                <table>
+                <tr>
+                    <td>
+                    <label for= 'activity'>
+                    Activity Name:
+                    </label>
+                    </td>
+                    
+                    <td>
+                        <select id = 'activity' name = 'new_activity_id'>
+                            {% for activity in activitylist %}
+                                {% if activity["name"] == form_data['activityRecord']['name'] %}
+                                <option value = '{{activity["id"]}}' selected='selected'>{{activity["name"]}}</option>
+                                {% else %}
+                                <option value = '{{activity["id"]}}'>{{activity["name"]}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+    
+                <tr>
+                    <td colspan = "2" align = "right" >
+                        <input type='submit' value='Submit'>
+                    </td>
+                </tr>
+                </table>
+    
+                </form>
+
+            {% elif 'add_activity' in page_type %}
+                </br>
+                {% for name, value in form_data['studentRecord'].items() %}
+                    {{form_header[name]}} : {{value}}
+                     </br>
+                {% endfor %}
+    
+                <form 
+                        action = "{{ form_meta['action'] }}"
+                        method = "{{ form_meta['method'] }}"
+                >
+                <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
+            
+                <table>
+                <tr>
+                    <td>
+                    <label for= 'activity'>
+                    Activity Name:
+                    </label>
+                    </td>
+                    
+                    <td>
+                        <select id = 'activity' name = 'activity_id'>
+                            {% for activity in activitylist %}
+                                <option value = '{{activity["id"]}}'>{{activity["name"]}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+    
+                <tr>
+                    <td colspan = "2" align = "right" >
+                        <input type='submit' value='Submit'>
+                    </td>
+                </tr>
+                </table>
+    
+                </form>
+
+            {% elif 'success' in page_type %}
+            </br>
+            {% for name, value in form_data.items() %}
+                {{form_header[name]}} : {{value}}
+                 </br>
+            {% endfor %}
+            
+
+            {% endif %}
+                     
+
         {% endif %}
+                        
             
             
         {% include 'footer.html' %}
