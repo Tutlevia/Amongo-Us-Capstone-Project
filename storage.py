@@ -287,8 +287,8 @@ class StudentCollection(Collection):
         query = f'''SELECT "Activity"."id" as "id",
                            "Activity"."name" as "name",
                            "Activity"."start_date" as "start_date",
-                           "Activity"."end_date" as "end_date"
-                           "Activity"."hours as "hours"
+                           "Activity"."end_date" as "end_date",
+                           "Activity"."hours" as "hours"
                     FROM "StudentActivity"
                     INNER JOIN "{self._tblname}"
                         ON "StudentActivity"."student_id" = "{self._tblname}"."id"
@@ -321,8 +321,8 @@ class StudentCollection(Collection):
                 SELECT "Class"."name" as "class"
                 FROM "{self._tblname}"
                 INNER JOIN "Class"
-                        ON "Class"."id" = "Student"."class_id" 
-                WHERE "{self._key}" =?;
+                        ON "Class"."id" = "{self._tblname}"."class_id" 
+                WHERE "{self._tblname}"."{self._key}" =?;
                 '''
         result = self._executedql(query, "one", (key,))
         if result is not None:
@@ -330,7 +330,7 @@ class StudentCollection(Collection):
         else:
             return None
             
-    def viewccca(self, key: str) -> Optional[str]:
+    def viewcca(self, key: str) -> Optional[str]:
         '''
         Returns the cca of the given student
 
@@ -346,9 +346,9 @@ class StudentCollection(Collection):
                 FROM "StudentCCA"
                 INNER JOIN "CCA"
                        ON "StudentCCA"."cca_id" = "CCA"."id"
-                INNER JOIN "Student"
-                       ON "StudentCCA"."student_id" = "Student"."id"
-                WHERE "{self._key}" =?;
+                INNER JOIN "{self._tblname}"
+                       ON "StudentCCA"."student_id" = "{self._tblname}"."{self._key}"
+                WHERE "{self._tblname}"."{self._key}" =?;
                 '''
         result = self._executedql(query, "one", (key,))
         if result is not None:

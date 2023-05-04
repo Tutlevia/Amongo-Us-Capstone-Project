@@ -193,10 +193,19 @@ def view_student():
     error = " "
     
     if request.args:
-        record = studentCollection.find(request.args['id'])
+        id = request.args['id'].strip(" ")
+        record = studentCollection.find(id)
         
         if record != None:
-            activities = studentCollection.viewactivity(request.args['id'])
+            # studentClass = studentCollection.viewclass(id)
+            # studentCCAs = studentCollection.viewcca(id)
+            studentClass = {'name':'2227',
+                           'id':'1'}
+            # studentCCAs = [{'name':'toiletcleaner',
+            #                'id':'1'}]
+            studentCCAs = None
+            studentActivities = studentCollection.viewactivity(id)
+            
             span1 = "View a Student(Success)"
             span2 = "Here are the students details:"
             form_header = {
@@ -214,6 +223,10 @@ def view_student():
                 'end_date': 'End Date',
                 'hours': 'Hours'
             }
+            table_header2 ={
+                'id': 'CCA ID',
+                'name': 'Name'
+            }
             return render_template("view.html",
                                page_type = 'success_student',
                                title = title,
@@ -221,12 +234,17 @@ def view_student():
                                span2 = span2,
                                form_header = form_header,
                                table_header = table_header,
+                               table_header2 = table_header2,
                                form_meta={
                                    'action': '/view/student?success',
                                    'method': 'get'
                                },
-                               form_data =  record,
-                               activities = activities
+                               form_data ={
+                                   'record':record,
+                                   'class':studentClass,
+                                   'activities':studentActivities,
+                                   'ccas':studentCCAs,
+                               }
                               )
         else:
             error = f'Student ID {request.args["id"]} not found! Try again!' 
@@ -520,7 +538,8 @@ def edit_cca():
     span2 = "Use the following form to update a CCA membership:"
     form_header  = {"student_id": "Student ID"}
     error = " "
-
+    updateSuccess = True
+    insertSuccess = True
     cca_data = [
         {
         "id": "1",
@@ -531,8 +550,66 @@ def edit_cca():
         "name": "toiletcleaner"
         }
     ]
-
-    if 'attempted' in request.args:
+    form_header = {
+                'id': ' Student ID',
+                'name': 'Name'  
+            }
+    if 'addattempted' in request.args:
+        new_record = {"student_id":request.form["student_id"],
+                      "cca_id":request.form["cca_id"]}
+        insertSuccess = studentCCACollection.insert(new_record)
+        if insertSuccess is False:
+            error = "Error: The new record already exists in the database!"
+        else:
+            ccaRecord = ccaCollection.find(request.form['cca_id'])
+            
+            span1 = "Add a CCA Membership (Success)"
+            span2 = "The CCA Membership has been successfully added!"
+            form_header = {
+                'id':'CCA ID',
+                'name': 'Name'
+            }
+            return render_template("edit.html",
+                           page_type = 'success',
+                           title = title,
+                           span1 = span1,
+                           span2 = span2,
+                           form_header = form_header,
+                           form_meta={
+                               'action': '/edit/cca?success',
+                               'method': 'post'
+                           },
+                           form_data = {
+                               'id': ccaRecord['id'],
+                               'name': ccaRecord['name']
+                           }
+                           )
+    if 'add' in request.args:
+            studentRecord = studentCollection.find(request.form["student_id"])
+            span1 = "Add a CCA to this Student"
+            span2 = "Use the following form to add a CCA to this student:"
+            ccalist = [{'name':"Tchoukball",
+                 'id':'1'
+               }, 
+               {'name':"toiletcleaner",
+                'id':'2'
+               }]
+            return render_template("edit.html",
+                       page_type = 'add_cca',
+                       title = title,
+                       span1 = span1,
+                       span2 = span2,
+                       form_header = form_header,
+                       form_meta={
+                           'action': '/edit/cca?addattempted',
+                           'method': 'post'
+                       },
+                       form_data =  {
+                           'studentRecord': studentRecord,
+                       },
+                       ccalist = ccalist
+                      )
+    if 'updateattempted' in request.args:
         # old_record = {"student_id":request.form["student_id"], 
         #               "cca_id":request.form["old_cca_id"]}
         # new_record = {"student_id":request.form["student_id"], 
@@ -559,7 +636,7 @@ def edit_cca():
                            form_header = form_header,
                            form_meta={
                                'action': '/edit/cca?success',
-                               'method': 'get'
+                               'method': 'post'
                            },
                            form_data = {
                                'id': ccaRecord['id'],
@@ -569,7 +646,7 @@ def edit_cca():
     if 'confirm' in request.args: 
             studentRecord = studentCollection.find(request.form['student_id'])
             ccaRecord = ccaCollection.find(request.form['cca_id'])
-
+        
             ccalist = [{'name':"Tchoukball",
                  'id':'1'
                }, 
@@ -584,7 +661,7 @@ def edit_cca():
                        span2 = span2,
                        form_header = form_header,
                        form_meta={
-                           'action': '/edit/cca?attempted',
+                           'action': '/edit/cca?updateattempted',
                            'method': 'post'
                        },
                        form_data =  {
@@ -594,17 +671,12 @@ def edit_cca():
                        ccalist = ccalist
                       )
     
-    if 'check' in request.args or updateSuccess is False:
-        record = studentCollection.find(request.form['student_id'])
+    if 'check' in request.args or updateSuccess is False or insertSuccess is False:
+        record = studentCollection.find(request.form['student_id'].strip(" "))
 
         if record is not None:
-            span1 = "Edit a Student"
-            span2 = "Here are the students details to edit:"
-            form_header = {
-                'id': ' Student ID',
-                'name': 'Name'  
-            }
-       
+            span1 = "Edit this Student's CCA"
+            span2 = "Please edit the Student's CCA details below:"
             return render_template("edit.html",
                        page_type = 'check_cca',
                        title = title,
@@ -614,13 +686,12 @@ def edit_cca():
                        error = error,
                        form_meta={
                            'action': '/edit/cca?confirm',
+                           'action2': '/edit/cca?add',
                            'method': 'post'
                        },
                        form_data =  record,
                        cca_data = cca_data
                       )
-
-        
         else:
             error = f'Student ID {request.form["id"]} not found! Try again!' 
         

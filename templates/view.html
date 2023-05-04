@@ -51,41 +51,66 @@
             
         {% elif 'success' in page_type %}
             </br>
-            {% for name, value in form_data.items() %}
+            {% for name, value in form_data['record'].items() %}
                 {{form_header[name]}} : {{value}}
                  </br>
             {% endfor %}
             
             {% if 'student' in page_type %} <!-- This is for student -->
+                <p>Class Name:     
+                <a href="/view/class?id={{form_data['class']['id']}}">{{form_data['class']['name']}}</a> 
+                </p>
                 <p> Activities participated in: </p>
-                {% if activities != None %}
+                {% if form_data['activities'] != None %}
                     <table> 
                         <tr>
-                        {% for header in activities[0].keys() %} 
-                            <td> {{header}} </td>
+                        {% for header in form_data['activities'][0].keys() %} 
+                            <td> {{table_header[header]}} </td>
                         {% endfor %}
                         </tr>
     
-                        {% for activity in activities %}
+                        {% for activity in form_data['activities'] %}
                             <tr>
                             {% for name, value in activity.items() %}
                                 {% if name == "name" %}
-                                    <td> <a href="/view/activity?id=+{{activity['id']}}">{{value}}</a></td>
+                                    <td> <a href="/view/activity?id={{activity['id']}}">{{value}}</a></td>
                                     
                                 {% else %}
                                     <td>{{value}}</td>
                                 {% endif %}
                             {% endfor %} 
                             </tr>
-                        {% endfor %}
-                                    
+                        {% endfor %}        
                     </table>
-                
                 {% else %}
                     <p> No activities found.</p>
-    
                 {% endif %}
-
+                <p>Student's CCAs:</p>
+                {% if form_data['ccas'] != None %}
+                        <table> 
+                            <tr>
+                            {% for header in form_data['ccas'][0].keys() %} 
+                                <td> {{table_header2[header]}} </td>
+                            {% endfor %}
+                            </tr>
+        
+                            {% for cca in form_data['ccas'] %}
+                                <tr>
+                                {% for name, value in cca.items() %}
+                                    {% if name == "name" %}
+                                        <td> <a href="/view/cca?id={{cca['id']}}">{{value}}</a></td>
+                                        
+                                    {% else %}
+                                        <td>{{value}}</td>
+                                    {% endif %}
+                                {% endfor %} 
+                                </tr>
+                            {% endfor %}        
+                        </table>
+                    {% else %}
+                        <p> No CCAs found.</p>
+                    {% endif %}
+                
             {% endif %} <!-- End for student -->
 
             {% if 'class' in page_type %} <!-- This is for class -->

@@ -91,12 +91,18 @@
                     </table>
                     </form>
                 {% else %}
-                    <p>  Student not found</p>
+                    <p>No CCAs found.</p>
                 {% endif %}
-            
+                <form 
+                    action = "{{ form_meta['action2'] }}"
+                    method = "{{ form_meta['method'] }}"
+                    >
+
+                    <input type = "hidden" name = 'student_id' value ={{form_data['id']}}> 
+                    <input type = "submit" value = "Add a new CCA">
             {% endif %}
 
-        {% elif 'confirm' in page_type %}
+        {% elif 'confirm_cca' in page_type %}
             </br>
             {% for name, value in form_data['studentRecord'].items() %}
                 {{form_header[name]}} : {{value}}
@@ -110,11 +116,6 @@
             <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
             <input type='hidden' name= 'old_cca_id' value='{{form_data["ccaRecord"]["id"]}}'>
             <table>
-            <tr>
-                <td>Name</td>
-                <td>Edit your CCA info here</td>
-            </tr>
-
             <tr>
                 <td>
                 <label for= 'cca'>
@@ -144,13 +145,52 @@
 
             </form>
 
+        {% elif 'add_cca' in page_type %}
+            </br>
+            {% for name, value in form_data['studentRecord'].items() %}
+                {{form_header[name]}} : {{value}}
+                 </br>
+            {% endfor %}
+
+            <form 
+                    action = "{{ form_meta['action'] }}"
+                    method = "{{ form_meta['method'] }}"
+            >
+            <input type='hidden' name= 'student_id' value='{{form_data["studentRecord"]["id"]}}'>
+        
+            <table>
+            <tr>
+                <td>
+                <label for= 'cca'>
+                CCA Name:
+                </label>
+                </td>
+                
+                <td>
+                    <select id = 'cca' name = 'cca_id'>
+                        {% for cca in ccalist %}
+                            <option value = '{{cca["id"]}}'>{{cca["name"]}}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan = "2" align = "right" >
+                    <input type='submit' value='Submit'>
+                </td>
+            </tr>
+            </table>
+
+            </form>
+                    
         {% elif 'success' in page_type %}
         </br>
         {% for name, value in form_data.items() %}
             {{form_header[name]}} : {{value}}
              </br>
         {% endfor %}
-            
+        
         {% endif %}
             
             
