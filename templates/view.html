@@ -58,7 +58,7 @@
             
             {% if 'student' in page_type %} <!-- This is for student -->
                 <p> Activities participated in: </p>
-                {%if activities != None %}
+                {% if activities != None %}
                     <table> 
                         <tr>
                         {% for header in activities[0].keys() %} 
@@ -82,11 +82,75 @@
                     </table>
                 
                 {% else %}
-                    <p> No activities found</p>
+                    <p> No activities found.</p>
     
                 {% endif %}
 
             {% endif %} <!-- End for student -->
+
+            {% if 'class' in page_type %} <!-- This is for class -->
+                <p> Class participated in: </p>
+                {%if students != None %}
+                    <table> 
+                        <tr>
+                        {% for header in students[0].keys() %} 
+                            <td> {{header}} </td>
+                        {% endfor %}
+                        </tr>
+    
+                        {% for student in students %}
+                            <tr>
+                            {% for name, value in student.items() %}
+                                {% if name == "name" %}
+                                    <td> <a href="/view/student?id=+{{student['id']}}">{{value}}</a></td>
+                                    
+                                {% else %}
+                                    <td>{{value}}</td>
+                                {% endif %}
+                            {% endfor %} 
+                            </tr>
+                        {% endfor %}
+                                    
+                    </table>
+                
+                {% else %}
+                    <p> No students found.</p>
+    
+                {% endif %}
+
+            {% endif %} <!-- End for class -->
+
+            {% if 'cca' in page_type %} <!-- This is for cca -->
+                <p> Students in CCA: </p>
+                {%if students != None %}
+                    <table> 
+                        <tr>
+                        {% for header in students[0].keys() %} 
+                            <td> {{header}} </td>
+                        {% endfor %}
+                        </tr>
+    
+                        {% for student in students %}
+                            <tr>
+                            {% for name, value in student.items() %}
+                                {% if name == "name" %}
+                                    <td> <a href="/view/student?id=+{{student['id']}}">{{value}}</a></td>
+                                    
+                                {% else %}
+                                    <td>{{value}}</td>
+                                {% endif %}
+                            {% endfor %} 
+                            </tr>
+                        {% endfor %}
+                                    
+                    </table>
+                
+                {% else %}
+                    <p> No students found.</p>
+    
+                {% endif %}
+
+            {% endif %} <!-- End for cca -->
 
             {% if 'activity' in page_type %} <!-- This is for activity -->
                 <p> Students involved : </p>
@@ -117,7 +181,7 @@
                     </table>
                 
                 {% else %}
-                    <p> No students found</p>
+                    <p> No students found.</p>
     
                 {% endif %}
 

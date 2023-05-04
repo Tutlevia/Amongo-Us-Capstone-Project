@@ -47,7 +47,7 @@ class Collection:
                 
             #getting all entries in the table
             elif type == "many":
-  git p              cur.execute(query)
+                cur.execute(query)
                 result = cur.fetchall()
 
             elif type == "join":
@@ -135,7 +135,7 @@ class Collection:
         '''
         result = self._executedql(query, "many", (None,))
 
-        if result == []:
+        if result != []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -298,7 +298,7 @@ class StudentCollection(Collection):
                     ORDER BY "Activity"."id";
                 '''
         result = self._executedql(query, "join", (key,))
-        if result == []:
+        if result != []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -373,7 +373,7 @@ class StudentCollection(Collection):
                 '''
         result = self._executedql(query, "many", (None,))
 
-        if result == []:
+        if result != []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -486,7 +486,6 @@ class ClassCollection(Collection):
         Return:
         Returns a list of dictionary for the students that are in a class if they exists, else return None
         '''
-
         query = f'''SELECT "Student"."id" as "id",
                            "Student"."name" as "name",
                            "Class"."name" as "class"
@@ -497,7 +496,7 @@ class ClassCollection(Collection):
                     ORDER BY "Student"."id";                    
                 '''
         result = self._executedql(query, "join", (key,))
-        if result == []:
+        if result != []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -720,7 +719,7 @@ class CCACollection(Collection):
                     ORDER BY "Student"."id";
                 '''
         result = self._executedql(query, "join", (key,))
-        if result == []:
+        if result != []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -772,7 +771,7 @@ class ActivityCollection(Collection):
                 "category" TEXT,
                 "role" TEXT,
                 "award" TEXT,
-                "hourss" INT,
+                "hours" INT,
                 "cca_id" TEXT,
                 Primary Key("id")
                 Foreign Key("cca_id") REFERENCES CCA("id")
@@ -863,7 +862,7 @@ class ActivityCollection(Collection):
                     ORDER BY "Student"."id";
                 '''
         result = self._executedql(query, "join", (key,))
-        if result == []:
+        if result != []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -924,7 +923,7 @@ class Junctiontable:
                 
             #getting all entries in the table
             elif type == "many":
-                cur.execute(query)
+                cur.execute(query, params)
                 result = cur.fetchall()
                 
             elif type == "join":
