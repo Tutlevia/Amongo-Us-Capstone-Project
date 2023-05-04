@@ -47,7 +47,7 @@ class Collection:
                 
             #getting all entries in the table
             elif type == "many":
-                cur.execute(query)
+  git p              cur.execute(query)
                 result = cur.fetchall()
 
             elif type == "join":
