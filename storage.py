@@ -47,9 +47,11 @@ class Collection:
                 
             #getting all entries in the table
             elif type == "many":
-                cur.execute(query)
+                if(params == (None,)):
+                    cur.execute(query)
+                else:
+                    cur.execute(query, params)
                 result = cur.fetchall()
-                
             #might want to add error message
             else:
                 pass
@@ -284,18 +286,18 @@ class StudentCollection(Collection):
         query = f'''SELECT "Activity"."id" as "id",
                            "Activity"."name" as "name",
                            "Activity"."start_date" as "start_date",
-                           "Activity"."end_date" as "end_date"
-                           "Activity"."hour as "hour"
+                           "Activity"."end_date" as "end_date",
+                           "Activity"."hours" as "hours"
                     FROM "StudentActivity"
                     INNER JOIN "{self._tblname}"
                         ON "StudentActivity"."student_id" = "{self._tblname}"."id"
                     INNER JOIN "Activity"
                         ON "StudentActivity"."activity_id" = "Activity"."id"
-                    ORDERED BY "Activity"."id";
-                    WHERE "Student"."id" = {key};
+                    WHERE "{self._tblname}"."id" = ?
+                    ORDER BY "Activity"."id";
                 '''
-        result = self._executedql(query, "many", (None,))
-        if result is not None:
+        result = self._executedql(query, "many", (key,))
+        if result != []:
             lst = []
             for record in result:
                 lst.append(dict(record))
@@ -409,15 +411,11 @@ class ClassCollection(Collection):
         Returns a list of dictionary for the students that are in a class if they exists, else return None
         '''
 
-        query = f'''SELECT "Student"."id" as "id",
-                           "Student"."name" as "name",
-                           "Class"."name" as "class"
-                    FROM "Class"
-                    INNER JOIN "Student"
-                        ON "Class"."id" = "Student"."class_id" 
-                    ORDERED BY "Student"."id"
-                    WHERE "Class"."id" = {key};
-                '''
+
+
+        
+
+        
         result = self._executedql(query, "many", (None,))
         if result is not None:
             lst = []
@@ -846,7 +844,7 @@ class Junctiontable:
                 
             #getting all entries in the table
             elif type == "many":
-                cur.execute(query)
+                cur.execute(query, params)
                 result = cur.fetchall()
                 
             #might want to add error message
@@ -881,15 +879,16 @@ class Junctiontable:
         Return:
         Returns True if the record is found, False if it is not found
         '''
-        query = f'''SELECT * FROM {self.tblname}
-                    WHERE {self._leftkey} = ?;'''
-        key = record.values()
-        result = self._executedql(query, "many", (key[0],))
-        if result is not None:
-            for records in result:
-                if dict(records)[self._rightkey] == key[1]:
-                    return True
-        return False
+        query = f'''SELECT * FROM {self._tblname}
+                    WHERE {self._leftkey} = ?
+                    AND {self._rightkey} = ?;'''
+
+        result = self._executedql(query, "many", (record[self._leftkey], record[self._rightkey]))
+        
+        if result != []:
+            return True
+        else:
+            return False
 
 
     def insert(self, record: dict) -> bool:
@@ -948,7 +947,7 @@ class Junctiontable:
         Returns True if the record has successfully been deleted, False otherwise
         '''
         
-        if self.find(old_record):
+        if self.find(record):
             values = tuple(record.values())
             query = f'''DELETE FROM "{self._tblname}"
                         WHERE {self._leftkey} = ? and {self._rightkey} = ?;

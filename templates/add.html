@@ -38,7 +38,7 @@
                 <td>
                     <select id = '{{name}}' name = '{{name}}'>
                         {% for cca in ccalist %}
-                            <option value = '{{cca}}'>{{cca}}</option>
+                            <option value = '{{cca["id"]}}'>{{cca["name"]}}</option>
                         {% endfor %}
                     </select>
                 </td>

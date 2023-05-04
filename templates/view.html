@@ -58,7 +58,7 @@
             
             {% if 'student' in page_type %} <!-- This is for student -->
                 <p> Activities participated in: </p>
-                {%if activities != None %}
+                {% if activities != None %}
                     <table> 
                         <tr>
                         {% for header in activities[0].keys() %} 
@@ -82,7 +82,7 @@
                     </table>
                 
                 {% else %}
-                    <p> No activities found</p>
+                    <p> No activities found.</p>
     
                 {% endif %}
 
@@ -114,7 +114,7 @@
                     </table>
                 
                 {% else %}
-                    <p> No class found</p>
+                    <p> No students found.</p>
     
                 {% endif %}
 
@@ -146,7 +146,7 @@
                     </table>
                 
                 {% else %}
-                    <p> No CCA found</p>
+                    <p> No students found.</p>
     
                 {% endif %}
 
@@ -181,7 +181,7 @@
                     </table>
                 
                 {% else %}
-                    <p> No students found</p>
+                    <p> No students found.</p>
     
                 {% endif %}
 
