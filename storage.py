@@ -98,19 +98,20 @@ class Collection:
         '''
         raise NotImplementedError
         
-    def find(self, key: str) -> Optional[dict]:
+    def find(self, key: str, column: list[str] = ["*"]) -> Optional[dict]:
         '''
         Finds the record with a matching key and returns a copy of it.
 
         Parameter:
         key: str -> Primary key used to identify the entity in the table
+        column: list[str] -> Argument used to select which columns in a table to be returned. Defaults to returning all column in a table.
 
         Return:
         Returns the record of the entity in the form of a dictionary if found, else returns None
         '''
 
         query = f'''
-                SELECT * FROM "{self._tblname}"
+                SELECT {str(column)[1:-1]} FROM "{self._tblname}"
                 WHERE "{self._key}" =?;
         '''
         result = self._executedql(query, "one", (key,))
@@ -187,9 +188,9 @@ class StudentCollection(Collection):
 
     (+) viewactivity(key) -> Returns all activity a given student is involved in
     
-    (+) viewclass(key) -> Returns the class of the given student
+    (+) viewclass(key) -> Returns all class info a given student is in
 
-    (+) viewcca(key) -> Return the cca of the given student
+    (+) viewcca(key) -> Return all cca info a given student is in
 
     (+) viewall() -> Returns all information about student, their class and cca
     """
@@ -306,9 +307,9 @@ class StudentCollection(Collection):
         else:
             return None
 
-    def viewclass(self, key: str) -> Optional[str]:
+    def viewclass(self, key: str) -> Optional[dict]:
         '''
-        Returns the class of the given student
+        Returns all class info a given student is in
 
         Parameter:
         key: str -> the student id to be queried
@@ -318,21 +319,21 @@ class StudentCollection(Collection):
         '''
 
         query = f'''
-                SELECT "Class"."name" as "class"
+                SELECT "Class"."name" as "class_name", "Class"."id" as "class_id"
                 FROM "{self._tblname}"
                 INNER JOIN "Class"
                         ON "Class"."id" = "{self._tblname}"."class_id" 
-                WHERE "{self._tblname}"."{self._key}" =?;
+                WHERE "{self._tblname}"."{self._key}" = ?;
                 '''
         result = self._executedql(query, "one", (key,))
         if result is not None:
-            return str(dict(result)["class"])
+            return dict(result)
         else:
             return None
             
     def viewcca(self, key: str) -> Optional[str]:
         '''
-        Returns the cca of the given student
+        Returns all cca info a given student is in
 
         Parameter:
         key: str -> the student id to be queried
@@ -342,17 +343,17 @@ class StudentCollection(Collection):
         '''
 
         query = f'''
-                SELECT "CCA"."name" as "CCA"
+                SELECT "CCA"."name" as "CCA_name", "CCA"."id" as "CCA_id"
                 FROM "StudentCCA"
-                INNER JOIN "CCA"
-                       ON "StudentCCA"."cca_id" = "CCA"."id"
                 INNER JOIN "{self._tblname}"
                        ON "StudentCCA"."student_id" = "{self._tblname}"."{self._key}"
-                WHERE "{self._tblname}"."{self._key}" =?;
+                INNER JOIN "CCA"
+                       ON "StudentCCA"."cca_id" = "CCA"."id"
+                WHERE "{self._tblname}"."{self._key}" = ?;
                 '''
         result = self._executedql(query, "one", (key,))
         if result is not None:
-            return str(dict(result)["CCA"])
+            return dict(result)
         else:
             return None
 
@@ -362,14 +363,23 @@ class StudentCollection(Collection):
         '''
 
         query = f'''
-                SELECT "Student"."id", "Student"."name", "Student"."student_age", "Student"."year_enrolled", "Student"."graduating_year", "CCA"."name", "Class"."name"
+                SELECT "Student"."id" as "student_id",
+                       "Student"."name" as "student_name", 
+                       "Student"."student_age" as "student_age", 
+                       "Student"."year_enrolled" as "student_year_enrolled", 
+                       "Student"."graduating_year" as "student_graduating_year", 
+                       "Class"."name" as "class_name",
+                       "Class"."id" as "class_id",
+                       "CCA"."name" as "cca_name", 
+                       "CCA"."id" as "cca.id"
                 FROM StudentCCA
+                INNER JOIN "{self._tblname}"
+                       ON "StudentCCA"."student_id" = "{self._tblname}"."{self._key}"
                 INNER JOIN "CCA"
                        ON "StudentCCA"."cca_id" = "CCA"."id"
-                INNER JOIN "Student"
-                       ON "StudentCCA"."student_id" = "Student"."id"                           INNER JOIN "Class"
-                        ON "Class"."id" = "Student"."class_id" 
-                ORDER BY "Student"."id";
+                INNER JOIN "Class"
+                       ON "Class"."id" = "Student"."class_id" 
+                ORDER BY "{self._tblname}"."{self._key}";
                 '''
         result = self._executedql(query, "many", (None,))
 
@@ -491,8 +501,8 @@ class ClassCollection(Collection):
                            "Class"."name" as "class"
                     FROM "{self._tblname}"
                     INNER JOIN "Student"
-                        ON "Class"."id" = "Student"."class_id" 
-                    WHERE "Class"."id" = ?
+                        ON "{self._tblname}"."{self._key}" = "Student"."class_id" 
+                    WHERE "{self._key}" = ?
                     ORDER BY "Student"."id";                    
                 '''
         result = self._executedql(query, "join", (key,))
@@ -710,12 +720,12 @@ class CCACollection(Collection):
                            "Class"."name" as "class"
                     FROM "StudentCCA"
                     INNER JOIN "{self._tblname}"
-                        ON "StudentCCA"."cca_id" = "CCA"."id"
+                        ON "StudentCCA"."cca_id" = "{self._tblname}"."{self._key}"
                     INNER JOIN "Student"
                         ON "StudentCCA"."student_id" = "Student"."id"
                     INNER JOIN "Class"
                         ON "Student"."class_id" = "Class"."id"
-                    WHERE "CCA"."id" = ?
+                    WHERE "{self._tblname}"."{self._key}" = ?
                     ORDER BY "Student"."id";
                 '''
         result = self._executedql(query, "join", (key,))
@@ -853,12 +863,12 @@ class ActivityCollection(Collection):
                            "Class"."name" as "class"
                     FROM "StudentActivity"
                     INNER JOIN "{self._tblname}"
-                        ON "StudentActivity"."student_id" = "Activity"."id"
+                        ON "StudentActivity"."student_id" = "{self._tblname}"."{self._key}"
                     INNER JOIN "Student"
                         ON "StudentActivity"."activity_id" = "Student"."id"
                     INNER JOIN "Class"
                         ON "Student"."class_id" = "Class"."id"
-                    WHERE "Activity"."id" = {key}
+                    WHERE "{self._tblname}"."{self._key}" = {key}
                     ORDER BY "Student"."id";
                 '''
         result = self._executedql(query, "join", (key,))
