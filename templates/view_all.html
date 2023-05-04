@@ -12,18 +12,68 @@
     <div class='container'> 
         <table> 
             <tr> 
-            {% for header in form_header.values() %} 
+            {% for header in table_header %} 
                 <td> {{header}} </td>
             {% endfor %}
-                
-            {% for student in form_data %}
-                <tr>
-                {% for value in student.values() %}
-                    <td>{{ value }}</td>
-                {% endfor %}
-                </tr>
-            {% endfor %}
 
+            {% if 'students' in page_type %}
+                
+                {% for student in table_data %}
+                    <tr>
+                    {% for name, value in student.items() %}
+                        {% if name == 'student_name' %} 
+                            <td><a href="/view/student?id={{student['student_id']}}">{{ value }}</a></td>
+                        {% elif name == 'class_name' %}
+                            <td><a href="/view/class?id={{student['class_id']}}"> {{ value }}</a></td>
+                        {% else %}
+                        <td>{{ value }}</td>
+                        {% endif %}
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+
+            {% elif 'class' in page_type %}
+                {% for class in table_data %}
+                    <tr>
+                    {% for name, value in class.items() %}
+                        {% if name == 'name' %} 
+                            <td><a href="/view/class?id={{class['id']}}">{{ value }}</a></td>
+                        
+                        {% else %}
+                        <td>{{ value }}</td>
+                        {% endif %}
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            
+            {% elif 'cca' in page_type %}
+                {% for cca in table_data %}
+                    <tr>
+                    {% for name, value in cca.items() %}
+                        {% if name == 'name' %} 
+                            <td><a href="/view/cca?id={{cca['id']}}">{{ value }}</a></td>
+                        
+                        {% else %}
+                        <td>{{ value }}</td>
+                        {% endif %}
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+
+            {% elif 'activities' in page_type %}
+                {% for activity in table_data %}
+                    <tr>
+                    {% for name, value in activity.items() %}
+                        {% if name == 'name' %} 
+                            <td><a href="/view/activity?id={{activity['id']}}">{{ value }}</a></td>
+                        
+                        {% else %}
+                        <td>{{ value }}</td>
+                        {% endif %}
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            {% endif %}
         </table>
 
 
