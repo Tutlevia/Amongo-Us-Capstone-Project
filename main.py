@@ -661,7 +661,7 @@ def edit_cca():
                        cca_data = cca_data
                       )
         else:
-            error = f'Student ID {request.form["id"]} not found! Try again!' 
+            error = f'Student ID {request.form["student_id"]} not found! Try again!' 
         
     return render_template("edit.html",
                            page_type = 'edit_cca',
@@ -819,7 +819,7 @@ def edit_activity():
                        activity_data = activity_data
                       )
         else:
-            error = f'Student ID {request.form["id"]} not found! Try again!' 
+            error = f'Student ID {request.form["student_id"]} not found! Try again!' 
     
     return render_template("edit.html",
                            page_type = 'edit_activity',
